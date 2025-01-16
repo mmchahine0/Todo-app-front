@@ -1,32 +1,165 @@
-import { TodoInput, Todo } from "./Todo.types";
+import { TodoInput } from "./Todo.types";
 import {
   getTodosByUserId,
   createTodo,
   updateTodo,
   deleteTodo,
 } from "./Todo.service";
-import { useEffect, useState } from "react";
+import { useRef, useCallback, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/persist/persist";
 import { useToast } from "@/hooks/use-toast";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
+
+const ITEMS_PER_PAGE = 6;
 
 const TodoDashboard = () => {
   const { toast } = useToast();
-  const [todos, setTodos] = useState<Todo[]>([]);
+  const accessToken = useSelector(
+    (state: RootState) => state.auth?.accessToken
+  );
+  const queryClient = useQueryClient();
+
+  // Filter state
+  const [filterStatus, setFilterStatus] = useState<
+    "all" | "active" | "completed"
+  >("all");
+
+  // Input state for new todo
   const [inputTodos, setInputTodos] = useState<TodoInput>({
     title: "",
     content: "",
     completed: false,
   });
+
+  // Editing state
   const [editingTodo, setEditingTodo] = useState<{
     id: string;
     title: string;
     content: string;
   } | null>(null);
-  const [isUpdating, setIsUpdating] = useState(false);
 
-  const accessToken = useSelector((state: RootState) => state.auth?.accessToken);
+  // Infinite Query for todos with filter
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    status,
+  } = useInfiniteQuery({
+    queryKey: ["todos", filterStatus],
+    queryFn: async ({ pageParam = 1 }) => {
+      const response = await getTodosByUserId(accessToken, {
+        page: pageParam,
+        limit: ITEMS_PER_PAGE,
+        status: filterStatus === "all" ? undefined : filterStatus,
+      });
+      return response;
+    },
+    // Time until data is considered stale
+    staleTime: 60000, // 1 minutes to refetch the completed if changed
 
+    // Time until inactive data is removed from the cache
+    gcTime: 1000 * 60 * 60, // 1 hour
+
+    // Refetch data when window regains focus
+    refetchOnWindowFocus: true,
+
+    // Retry failed requests
+    retry: 3,
+
+    // Retrying delay between attempts
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    getNextPageParam: (lastPage) => lastPage.pagination.nextPage,
+    initialPageParam: 1,
+  });
+
+  // Mutations
+  const createMutation = useMutation({
+    mutationFn: (newTodo: TodoInput) => createTodo(newTodo, accessToken),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["todos", filterStatus] });
+      toast({
+        title: "Todo created",
+        description: "Your todo has been created successfully.",
+        duration: 2000,
+      });
+      setInputTodos({ title: "", content: "", completed: false });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create todo",
+        duration: 2000,
+      });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, todo }: { id: string; todo: TodoInput }) =>
+      updateTodo(id, todo, accessToken),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["todos", filterStatus] });
+      toast({
+        title: "Todo updated",
+        description: "Your todo has been updated successfully",
+        duration: 2000,
+      });
+      setEditingTodo(null);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update todo",
+        duration: 2000,
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteTodo(id, accessToken),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["todos", filterStatus] });
+      toast({
+        title: "Todo deleted",
+        description: "Your todo has been deleted successfully.",
+        duration: 2000,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete todo",
+        duration: 2000,
+      });
+    },
+  });
+
+  // Intersection Observer for infinite scrolling
+  const observer = useRef<IntersectionObserver | null>(null);
+  const lastTodoElementRef = useCallback(
+    (node: HTMLLIElement | null) => {
+      if (isFetchingNextPage) return;
+
+      if (observer.current) observer.current.disconnect();
+
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasNextPage) {
+          fetchNextPage();
+        }
+      });
+
+      if (node) observer.current.observe(node);
+    },
+    [isFetchingNextPage, hasNextPage, fetchNextPage]
+  );
+
+  // Handlers
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setInputTodos((prev) => ({
@@ -45,207 +178,111 @@ const TodoDashboard = () => {
     }
   };
 
-  const startEditing = (todo: Todo) => {
-    setEditingTodo({
-      id: todo.id,
-      title: todo.title,
-      content: todo.content,
-    });
-  };
-
-  const cancelEditing = () => {
-    setEditingTodo(null);
-  };
-
-  const handleToggleComplete = async (todoId: string, currentStatus: boolean) => {
-    const todoToUpdate = todos.find((todo) => todo.id === todoId);
-    if (!todoToUpdate) return;
-
-    // Optimistic update
-    setTodos((prevTodos) =>
-      prevTodos.map((todo) =>
-        todo.id === todoId ? { ...todo, completed: !currentStatus } : todo
-      )
-    );
-
-    try {
-      await updateTodo(
-        todoId,
-        { ...todoToUpdate, completed: !currentStatus },
-        accessToken
-      );
-      toast({
-        title: "Todo updated",
-        description: "Status changed successfully",
-        duration: 2000,
-      });
-    } catch (error) {
-      console.log(error)
-      // Revert optimistic update on error
-      setTodos((prevTodos) =>
-        prevTodos.map((todo) =>
-          todo.id === todoId ? { ...todo, completed: currentStatus } : todo
-        )
-      );
-      toast({
-        title: "Error",
-        description: "Failed to update todo status",
-        duration: 2000,
-      });
-    }
+  const handleCreateTodo = (e: React.FormEvent) => {
+    e.preventDefault();
+    createMutation.mutate(inputTodos);
   };
 
   const handleUpdateTodo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingTodo) return;
 
-    setIsUpdating(true);
-    const originalTodo = todos.find((todo) => todo.id === editingTodo.id);
-    
-    // Optimistic update
-    setTodos((prevTodos) =>
-      prevTodos.map((todo) =>
-        todo.id === editingTodo.id
-          ? { ...todo, title: editingTodo.title, content: editingTodo.content }
-          : todo
-      )
-    );
+    const originalTodo = data?.pages
+      .flatMap((page) => page.data)
+      .find((todo) => todo.id === editingTodo.id);
 
-    try {
-      await updateTodo(
-        editingTodo.id,
-        {
-          title: editingTodo.title,
-          content: editingTodo.content,
-          completed: originalTodo?.completed || false,
-        },
-        accessToken
-      );
-      
-      toast({
-        title: "Todo updated",
-        description: "Your todo has been updated successfully",
-        duration: 2000,
-      });
-      setEditingTodo(null);
-    } catch (error) {
-      console.log(error)
-      // Revert optimistic update on error
-      if (originalTodo) {
-        setTodos((prevTodos) =>
-          prevTodos.map((todo) =>
-            todo.id === editingTodo.id ? originalTodo : todo
-          )
-        );
-      }
-      toast({
-        title: "Error",
-        description: "Failed to update todo",
-        duration: 2000,
-      });
-    } finally {
-      setIsUpdating(false);
-    }
+    if (!originalTodo) return;
+
+    updateMutation.mutate({
+      id: editingTodo.id,
+      todo: {
+        title: editingTodo.title,
+        content: editingTodo.content,
+        completed: originalTodo.completed,
+      },
+    });
   };
 
-  useEffect(() => {
-    fetchTodos();
-  }, []);
+  const handleToggleComplete = (todoId: string, currentStatus: boolean) => {
+    const todo = data?.pages
+      .flatMap((page) => page.data)
+      .find((t) => t.id === todoId);
 
-  const fetchTodos = async () => {
-    try {
-      const fetchedTodos = await getTodosByUserId(accessToken);
-      setTodos(fetchedTodos);
-    } catch (err) {
-      console.log(err)
-      toast({
-        title: "Error",
-        description: "Failed to fetch todos",
-        duration: 2000,
-      });
-    }
+    if (!todo) return;
+
+    updateMutation.mutate({
+      id: todoId,
+      todo: {
+        ...todo,
+        completed: !currentStatus,
+      },
+    });
   };
 
-  const handleCreateTodo = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const newTodo = await createTodo(inputTodos, accessToken);
-      setTodos((prev) => [...prev, newTodo]);
-      toast({
-        title: "Todo created",
-        description: "Your todo has been created successfully.",
-        duration: 2000,
-      });
-      setInputTodos({ title: "", content: "", completed: false });
-    } catch (e) {
-      console.log(e)
-      toast({
-        title: "Error",
-        description: "Failed to create todo",
-        duration: 2000,
-      });
-    }
+  const handleFilterChange = (newStatus: "all" | "active" | "completed") => {
+    setFilterStatus(newStatus);
   };
 
-  const handleDeleteTodo = async (id: string) => {
-    // Optimistic delete
-    const todoToDelete = todos.find((todo) => todo.id === id);
-    setTodos((prev) => prev.filter((todo) => todo.id !== id));
-
-    try {
-      await deleteTodo(id, accessToken);
-      toast({
-        title: "Todo deleted",
-        description: "Your todo has been deleted successfully.",
-        duration: 2000,
-      });
-    } catch (e) {
-      console.log(e)
-      // Revert optimistic delete
-      if (todoToDelete) {
-        setTodos((prev) => [...prev, todoToDelete]);
-      }
-      toast({
-        title: "Error",
-        description: "Failed to delete todo",
-        duration: 2000,
-      });
-    }
-  };
+  // Flatten todos from all pages
+  const todos = data?.pages.flatMap((page) => page.data) ?? [];
+  const totalItems = data?.pages[0]?.pagination.totalItems ?? 0;
 
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Todo List</h1>
-
-      <form onSubmit={handleCreateTodo} className="mb-4">
-        <input
-          type="text"
-          name="title"
-          value={inputTodos.title}
-          onChange={handleInputChange}
-          placeholder="Title"
-          className="border p-2 mr-2"
-        />
-        <input
-          type="text"
-          name="content"
-          value={inputTodos.content}
-          onChange={handleInputChange}
-          placeholder="Content"
-          className="border p-2 mr-2"
-        />
-        <button
-          type="submit"
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-        >
-          Add Todo
-        </button>
-      </form>
-
-      <ul className="space-y-4">
-        {todos.map((todo) => (
+      <div className="flex justify-between items-center mb-6">
+        {/* Create Todo Form */}
+        <form onSubmit={handleCreateTodo} className="mb-4">
+          <input
+            type="text"
+            name="title"
+            value={inputTodos.title}
+            onChange={handleInputChange}
+            placeholder="Title"
+            className="border p-2 mr-2"
+          />
+          <input
+            type="text"
+            name="content"
+            value={inputTodos.content}
+            onChange={handleInputChange}
+            placeholder="Content"
+            className="border p-2 mr-2"
+          />
+          <button
+            type="submit"
+            disabled={createMutation.isPending}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-blue-300"
+          >
+            {createMutation.isPending ? "Adding..." : "Add Todo"}
+          </button>
+        </form>
+        {/* Filter Controls */}
+        <div className="mb-6 flex items-center gap-4">
+          <span className="font-medium">Filter:</span>
+          <div className="flex gap-2">
+            {(["all", "active", "completed"] as const).map((status) => (
+              <button
+                key={status}
+                onClick={() => handleFilterChange(status)}
+                className={`px-4 py-2 rounded transition-colors ${
+                  filterStatus === status
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200 hover:bg-gray-300"
+                }`}
+              >
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+      {/* Todo List */}
+      <ul className="space-y-4 max-h-[550px] overflow-y-auto">
+        {todos.map((todo, index) => (
           <li
             key={todo.id}
+            ref={index === todos.length - 1 ? lastTodoElementRef : null}
             className="flex items-center justify-between p-4 border rounded"
           >
             {editingTodo && editingTodo.id === todo.id ? (
@@ -267,15 +304,15 @@ const TodoDashboard = () => {
                   />
                   <button
                     type="submit"
-                    disabled={isUpdating}
-                    className="bg-green-500 text-white px-4 py-2 rounded"
+                    disabled={updateMutation.isPending}
+                    className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:bg-green-300"
                   >
-                    Save
+                    {updateMutation.isPending ? "Saving..." : "Save"}
                   </button>
                   <button
                     type="button"
-                    onClick={cancelEditing}
-                    className="bg-gray-500 text-white px-4 py-2 rounded"
+                    onClick={() => setEditingTodo(null)}
+                    className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
                   >
                     Cancel
                   </button>
@@ -287,8 +324,11 @@ const TodoDashboard = () => {
                   <input
                     type="checkbox"
                     checked={todo.completed}
-                    onChange={() => handleToggleComplete(todo.id, todo.completed)}
+                    onChange={() =>
+                      handleToggleComplete(todo.id, todo.completed)
+                    }
                     className="mr-4"
+                    disabled={updateMutation.isPending}
                   />
                   <span
                     className={`flex-1 ${todo.completed ? "line-through" : ""}`}
@@ -299,23 +339,59 @@ const TodoDashboard = () => {
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => startEditing(todo)}
-                    className="bg-blue-500 text-white px-4 py-2 rounded"
+                    onClick={() =>
+                      setEditingTodo({
+                        id: todo.id,
+                        title: todo.title,
+                        content: todo.content,
+                      })
+                    }
+                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                   >
                     Edit
                   </button>
                   <button
-                    onClick={() => handleDeleteTodo(todo.id)}
-                    className="bg-red-500 text-white px-4 py-2 rounded"
+                    onClick={() => deleteMutation.mutate(todo.id)}
+                    disabled={deleteMutation.isPending}
+                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 disabled:bg-red-300"
                   >
-                    Delete
+                    {deleteMutation.isPending ? "Deleting..." : "Delete"}
                   </button>
                 </div>
               </>
             )}
           </li>
         ))}
+
+        {(isLoading || isFetchingNextPage) && (
+          <li className="flex justify-center py-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          </li>
+        )}
       </ul>
+
+      {/* Error State */}
+      {status === "error" && (
+        <div className="text-center py-4 text-red-500">
+          Error loading todos. Please try again.
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!isLoading && todos.length === 0 && (
+        <div className="text-center py-8 text-gray-500">
+          {filterStatus === "all"
+            ? "No todos found. Create one to get started!"
+            : `No ${filterStatus} todos found.`}
+        </div>
+      )}
+
+      {/* Items Count */}
+      {todos.length > 0 && (
+        <div className="text-center mt-4 text-gray-600">
+          Showing {todos.length} of {totalItems} items
+        </div>
+      )}
     </div>
   );
 };

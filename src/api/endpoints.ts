@@ -2,7 +2,7 @@ export const ENDPOINTS = {
   Auth: {
     Signin: "/auth/signin",
     Signup: "/auth/signup",
-    RefreshToken:"/auth/refresh"
+    RefreshToken: "/auth/refresh",
   },
   Todos: {
     Base: "/todos",

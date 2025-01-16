@@ -8,20 +8,21 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const auth = useSelector((state: RootState) => state.auth);
-  
+  const accessToken = useSelector(
+    (state: RootState) => state.auth?.accessToken
+  );
+
   // Add a loading state check
   const isInitialized = useSelector(
     (state: RootState) => state.auth._initialized
   );
 
+  if (!accessToken) {
+    return <Navigate to="/login" replace />;
+  }
   // Show nothing while checking authentication
   if (!isInitialized) {
     return null;
-  }
-
-  if (!auth?.accessToken) {
-    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;
