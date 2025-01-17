@@ -1,15 +1,23 @@
-import { Calendar, ChevronDown, ChevronUp, Home, Inbox, Search, Settings, User2 } from "lucide-react"
-import { Link } from "react-router-dom"
-import * as sidebar from "@/components/ui/sidebar"
-import * as dropdown from "@/components/ui/dropdown-menu"
-import * as collapse from "@/components/ui/collapsible"
+import {
+  Calendar,
+  ChevronDown,
+  ChevronUp,
+  Home,
+  Inbox,
+  Search,
+  Settings,
+  User2,
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import * as sidebar from "@/components/ui/sidebar";
+import * as dropdown from "@/components/ui/dropdown-menu";
+import * as collapse from "@/components/ui/collapsible";
 
- 
-import {AppSidebarProps} from "../sidebar/Sidebar.types"
-import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { clearCredentials } from '@/redux/slices/authSlices';
-import { clearUserData } from '@/redux/slices/userSlice';
+import { AppSidebarProps } from "../sidebar/Sidebar.types";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { clearCredentials } from "@/redux/slices/authSlices";
+import { clearUserData } from "@/redux/slices/userSlice";
 
 // Menu items with proper routes
 const items = [
@@ -24,8 +32,8 @@ const items = [
     icon: Inbox,
   },
   {
-    title: "Calendar",
-    url: "/calendar",
+    title: "Profile",
+    url: "/dashboard/profile",
     icon: Calendar,
   },
   {
@@ -38,21 +46,21 @@ const items = [
     url: "/settings",
     icon: Settings,
   },
-]
+];
 export function AppSidebar({ username, isOpen }: AppSidebarProps) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const handleSignOut = () => {
     dispatch(clearCredentials());
     dispatch(clearUserData());
-    navigate('/signin');
+    navigate("/signin");
   };
-  return (    
+  return (
     <div className="flex">
       <sidebar.Sidebar collapsible="icon">
         <sidebar.SidebarHeader>
           <sidebar.SidebarMenu>
-          {isOpen && (
+            {isOpen && (
               <sidebar.SidebarMenuItem>
                 <dropdown.DropdownMenu>
                   <dropdown.DropdownMenuTrigger asChild>
@@ -89,7 +97,7 @@ export function AppSidebar({ username, isOpen }: AppSidebarProps) {
               </sidebar.SidebarMenu>
             </sidebar.SidebarGroupContent>
           </sidebar.SidebarGroup>
-          
+
           <collapse.Collapsible defaultOpen className="group/collapsible">
             <sidebar.SidebarGroup>
               <sidebar.SidebarGroupLabel asChild>
@@ -129,7 +137,7 @@ export function AppSidebar({ username, isOpen }: AppSidebarProps) {
                 <dropdown.DropdownMenuTrigger asChild>
                   <sidebar.SidebarMenuButton>
                     <User2 />
-                    {username || "Guest"}                    <ChevronUp className="ml-auto" />
+                    {username || "Guest"} <ChevronUp className="ml-auto" />
                   </sidebar.SidebarMenuButton>
                 </dropdown.DropdownMenuTrigger>
                 <dropdown.DropdownMenuContent
@@ -152,6 +160,5 @@ export function AppSidebar({ username, isOpen }: AppSidebarProps) {
         </sidebar.SidebarFooter>
       </sidebar.Sidebar>
     </div>
-   
-    )
+  );
 }

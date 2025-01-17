@@ -7,8 +7,8 @@ import NotFound from "@/features/notFound/notFound";
 import Home from "../features/home/Home.component";
 import { ProtectedRoute } from "./ProtectedRoute";
 import Layout from "@/features/sidebar/Layout";
-import Test from "../features/Test"
-
+import Test from "../features/Test";
+import UserProfile from "../features/userProfile/User.component";
 
 const MainRouter: React.FC = () => {
   return (
@@ -18,14 +18,32 @@ const MainRouter: React.FC = () => {
         <Route path="/login" element={<SigninComponent />} />
         <Route path="/signup" element={<SignupComponent />} />
 
-        {/* Protected Routes with Sidebar */}       
-        <Route
-          element={ 
-              <Layout/>
-          }
-        >               
-          <Route path="/dashboard/todo" element={<ProtectedRoute><TodoDashboard /> </ProtectedRoute>} />
-          <Route path="/dashboard/test" element={<ProtectedRoute><Test/></ProtectedRoute>}/>
+        {/* Protected Routes with Sidebar */}
+        <Route element={<Layout />}>
+          <Route
+            path="/dashboard/todo"
+            element={
+              <ProtectedRoute>
+                <TodoDashboard />{" "}
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/test"
+            element={
+              <ProtectedRoute>
+                <Test />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/profile"
+            element={
+              <ProtectedRoute>
+                <UserProfile />
+              </ProtectedRoute>
+            }
+          />
         </Route>
 
         <Route path="/home" element={<Home />} />

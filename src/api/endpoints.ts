@@ -8,4 +8,7 @@ export const ENDPOINTS = {
     Base: "/todos",
     ById: (id: string) => `/todos/${id}`,
   },
+  User: {
+    Profile: "/user/profile",
+  },
 };

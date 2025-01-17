@@ -2,8 +2,8 @@ import { RootState } from "@/redux/persist/persist";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-import {clearCredentials} from "../../redux/slices/authSlices";
-import {clearUserData} from "../../redux/slices/userSlice";
+import { clearCredentials } from "../../redux/slices/authSlices";
+import { clearUserData } from "../../redux/slices/userSlice";
 
 const Home: React.FC = () => {
   return (
@@ -20,9 +20,9 @@ const Navbar: React.FC = () => {
   const { accessToken } = useSelector((state: RootState) => state.auth);
 
   const handleSignOut = () => {
-dispatch(clearCredentials());
+    dispatch(clearCredentials());
     dispatch(clearUserData());
-    navigate('/signin');    navigate('/');
+    navigate("/login");
   };
 
   return (
@@ -35,7 +35,10 @@ dispatch(clearCredentials());
           </Link>
           {accessToken ? (
             <>
-              <Link to="/dashboard/todo" className="text-gray-300 hover:text-white">
+              <Link
+                to="/dashboard/todo"
+                className="text-gray-300 hover:text-white"
+              >
                 Dashboard
               </Link>
               <button
