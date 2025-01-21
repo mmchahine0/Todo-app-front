@@ -3,3 +3,6 @@ export interface SignupCredentials {
   password: string;
   name: string;
 }
+
+export interface ServerError {
+  message: string; }

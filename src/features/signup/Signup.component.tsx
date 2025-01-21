@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { signup } from "./Signup.service";
-import { SignupCredentials } from "./Signup.types";
+import { SignupCredentials,ServerError } from "./Signup.types";
 import {
   Card,
   CardHeader,
@@ -21,6 +21,7 @@ import {
   validatePassword,
   validateName,
 } from "../../utils/validationConstants";
+import { AxiosError } from "axios";
 
 const RATE_LIMIT_CONFIG = {
   maxAttempts: 5, // 5 attempts
@@ -107,12 +108,12 @@ const Signup: React.FC = () => {
 
       signupLimiter.reset();
       navigate("/login");
-    } catch (err) {
+    } catch (err : any) {
+      const axioserr = err as AxiosError<ServerError>
       setErrors((prev) => ({
         ...prev,
-        server: "Failed to sign up. Please check your details and try again.",
+        server: `${axioserr.response?.data.message}`,
       }));
-      console.error(err);
     } finally {
       setIsLoading(false);
     }

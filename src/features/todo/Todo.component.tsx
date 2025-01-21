@@ -278,7 +278,7 @@ const TodoDashboard = () => {
         </div>
       </div>
       {/* Todo List */}
-      <ul className="space-y-4 max-h-[550px] overflow-y-auto">
+      <ul className="space-y-4">
         {todos.map((todo, index) => (
           <li
             key={todo.id}

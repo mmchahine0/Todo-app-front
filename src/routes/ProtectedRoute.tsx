@@ -17,7 +17,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     (state: RootState) => state.auth._initialized
   );
 
-  if (!accessToken) {
+  if (!accessToken || accessToken=="") {
     return <Navigate to="/login" replace />;
   }
   // Show nothing while checking authentication

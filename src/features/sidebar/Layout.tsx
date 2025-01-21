@@ -20,13 +20,13 @@ export default function Layout() {
 
         {/* Main content */}
         <div className="flex-1">
-          <div className="flex items-center gap-2 p-4 border-b">
+          <div className="flex items-center gap-2 p-4 border-b fixed w-full h-16 md:h-16 bg-white">
             <SidebarTrigger />
             <BreadcrumbComponent />
           </div>
 
           {/* Page content */}
-          <main className="p-2">
+          <main className="pt-16 p-2">
             <Outlet />
           </main>
         </div>
