@@ -13,23 +13,23 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "../../redux/slices/authSlices";
-import { setUserData} from "../../redux/slices/userSlice"
+import { setUserData } from "../../redux/slices/userSlice";
 import { RateLimiter } from "../../utils/rateLimit";
 import { useToast } from "@/hooks/use-toast";
 import {
   validateEmail,
   validatePassword,
 } from "../../utils/validationConstants";
-import axios from "axios"
+import axios from "axios";
 
 const RATE_LIMIT_CONFIG = {
   maxAttempts: 5, // 5 attempts
   windowMs: 15 * 60 * 1000, // 15 minutes
 };
-const signinLimiter = new RateLimiter("authIn", RATE_LIMIT_CONFIG); 
+const signinLimiter = new RateLimiter("authIn", RATE_LIMIT_CONFIG);
 
 const Signin = () => {
   const [userInput, setUserInput] = useState<LoginCredentials>({
@@ -103,14 +103,15 @@ const Signin = () => {
             accessToken: responseData.accessToken,
             refreshToken: responseData.refreshToken,
             id: responseData.id,
-            _initialized: true
-          }));
+            _initialized: true,
+          })
+        );
         dispatch(
-            setUserData({
-              username: responseData.name,
-              email: responseData.email,
-            })
-          );
+          setUserData({
+            username: responseData.name,
+            email: responseData.email,
+          })
+        );
         signinLimiter.reset();
         navigate("/dashboard/todo");
       } else {
@@ -119,14 +120,17 @@ const Signin = () => {
           server: "Invalid credentials",
         }));
       }
-    }catch (error) {
+    } catch (error) {
       signinLimiter.increment();
       if (axios.isAxiosError(error)) {
-        const errorMessage = error.response?.data?.message || 'An error occurred';
-        setErrors(prev => ({
+        const errorMessage =
+          error.response?.data?.message || "An error occurred";
+        setErrors((prev) => ({
           ...prev,
-          server: errorMessage
-        }))}} finally {
+          server: errorMessage,
+        }));
+      }
+    } finally {
       setIsLoading(false);
     }
   };
@@ -195,12 +199,12 @@ const Signin = () => {
         <CardFooter className="flex flex-col space-y-4">
           <div className="text-sm text-center">
             <p className="font-medium text-black-500">Don't have an account?</p>
-            <a
-              href="/signup"
+            <Link
+              to="/signup"
               className="font-medium text-primary hover:text-primary/90"
             >
               Sign up
-            </a>
+            </Link>
           </div>
         </CardFooter>
       </Card>

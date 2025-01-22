@@ -6,7 +6,7 @@ import {
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbSeparator,
-  BreadcrumbPage
+  BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
 
 export const BreadcrumbComponent = () => {
@@ -16,12 +16,11 @@ export const BreadcrumbComponent = () => {
     return string.charAt(0).toUpperCase() + string.slice(1);
   };
 
- 
   return (
     <Breadcrumb>
       <BreadcrumbList>
         <BreadcrumbItem>
-          <BreadcrumbLink href="/">Home</BreadcrumbLink>
+          <BreadcrumbLink href="/home">Home</BreadcrumbLink>
         </BreadcrumbItem>
         {pathnames.map((value, index) => {
           const to = `/${pathnames.slice(0, index + 1).join("/")}`;

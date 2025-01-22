@@ -1,14 +1,14 @@
 import { AppSidebar } from "./Sidebar";
-import { Outlet } from 'react-router-dom';
+import { Outlet } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/persist/persist";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { BreadcrumbComponent } from "./BreadcrumbComponent";
-import { useState } from "react"
+import { useState } from "react";
 
 export default function Layout() {
   const { username } = useSelector((state: RootState) => state.userdata);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
 
   return (
     <SidebarProvider open={open} onOpenChange={setOpen}>

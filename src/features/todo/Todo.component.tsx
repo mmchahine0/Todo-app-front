@@ -9,11 +9,8 @@ import { useRef, useCallback, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/persist/persist";
 import { useToast } from "@/hooks/use-toast";
-import {
-  useInfiniteQuery,
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
+import { queryClient } from "../../lib/queryClient";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -22,8 +19,6 @@ const TodoDashboard = () => {
   const accessToken = useSelector(
     (state: RootState) => state.auth?.accessToken
   );
-  const queryClient = useQueryClient();
-
   // Filter state
   const [filterStatus, setFilterStatus] = useState<
     "all" | "active" | "completed"
@@ -61,20 +56,6 @@ const TodoDashboard = () => {
       });
       return response;
     },
-    // Time until data is considered stale
-    staleTime: 60000, // 1 minutes to refetch the completed if changed
-
-    // Time until inactive data is removed from the cache
-    gcTime: 1000 * 60 * 60, // 1 hour
-
-    // Refetch data when window regains focus
-    refetchOnWindowFocus: true,
-
-    // Retry failed requests
-    retry: 3,
-
-    // Retrying delay between attempts
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     getNextPageParam: (lastPage) => lastPage.pagination.nextPage,
     initialPageParam: 1,
   });

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { signup } from "./Signup.service";
-import { SignupCredentials,ServerError } from "./Signup.types";
+import { SignupCredentials, ServerError } from "./Signup.types";
 import {
   Card,
   CardHeader,
@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock, User } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { RateLimiter } from "../../utils/rateLimit";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -28,7 +28,7 @@ const RATE_LIMIT_CONFIG = {
   windowMs: 15 * 60 * 1000, // 15 minutes
 };
 
-const signupLimiter = new RateLimiter("authUp", RATE_LIMIT_CONFIG); 
+const signupLimiter = new RateLimiter("authUp", RATE_LIMIT_CONFIG);
 const Signup: React.FC = () => {
   const [credentials, setCredentials] = useState<SignupCredentials>({
     email: "",
@@ -108,8 +108,8 @@ const Signup: React.FC = () => {
 
       signupLimiter.reset();
       navigate("/login");
-    } catch (err : any) {
-      const axioserr = err as AxiosError<ServerError>
+    } catch (err) {
+      const axioserr = err as AxiosError<ServerError>;
       setErrors((prev) => ({
         ...prev,
         server: `${axioserr.response?.data.message}`,
@@ -204,12 +204,12 @@ const Signup: React.FC = () => {
             <p className="font-medium text-primary text-black-500">
               Already have an account?
             </p>
-            <a
-              href="/login"
+            <Link
+              to="/login"
               className="font-medium text-primary hover:text-primary/90 text-gray-500"
             >
               Sign in
-            </a>
+            </Link>
           </div>
         </CardFooter>
       </Card>

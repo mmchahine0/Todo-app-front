@@ -9,6 +9,8 @@ import { ProtectedRoute } from "./ProtectedRoute";
 import Layout from "@/features/sidebar/Layout";
 import Test from "../features/Test";
 import UserProfile from "../features/userProfile/User.component";
+import TestDashboard from "@/features/dashboard/TestDashboard";
+import TestHelp from "@/features/help/TestHelp";
 
 const MainRouter: React.FC = () => {
   return (
@@ -17,14 +19,13 @@ const MainRouter: React.FC = () => {
         {/* Public Routes */}
         <Route path="/login" element={<SigninComponent />} />
         <Route path="/signup" element={<SignupComponent />} />
-
-        {/* Protected Routes with Sidebar */}
         <Route element={<Layout />}>
+          {/* Protected Routes with Sidebar */}
           <Route
             path="/dashboard/todo"
             element={
               <ProtectedRoute>
-                <TodoDashboard />{" "}
+                <TodoDashboard />
               </ProtectedRoute>
             }
           />
@@ -41,6 +42,22 @@ const MainRouter: React.FC = () => {
             element={
               <ProtectedRoute>
                 <UserProfile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <TestDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/help/test"
+            element={
+              <ProtectedRoute>
+                <TestHelp />
               </ProtectedRoute>
             }
           />

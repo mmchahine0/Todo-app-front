@@ -4,8 +4,6 @@ import {
   ChevronUp,
   Home,
   Inbox,
-  Search,
-  Settings,
   User2,
 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -36,17 +34,14 @@ const items = [
     url: "/dashboard/profile",
     icon: Calendar,
   },
+];
+const helpItems = [
   {
-    title: "Search",
-    url: "/search",
-    icon: Search,
-  },
-  {
-    title: "Settings",
-    url: "/settings",
-    icon: Settings,
+    title: "Test",
+    url: "/dashboard/help/test",
   },
 ];
+
 export function AppSidebar({ username, isOpen }: AppSidebarProps) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -112,7 +107,7 @@ export function AppSidebar({ username, isOpen }: AppSidebarProps) {
                     <sidebar.SidebarMenuItem>
                       <sidebar.SidebarMenuButton>
                         <sidebar.SidebarMenuSub>
-                          {items.map((item) => (
+                          {helpItems.map((item) => (
                             <sidebar.SidebarMenuSubItem key={item.title}>
                               <sidebar.SidebarMenuSubButton asChild>
                                 <Link to={item.url}>

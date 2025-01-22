@@ -2,13 +2,14 @@ import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/persist/persist";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { getUserProfile, updateUserProfile } from "./User.service";
 import { UserProfileUpdateInput } from "./User.types";
 import { setUserData } from "@/redux/slices/userSlice";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { queryClient } from "../../lib/queryClient";
 
 const UserProfile = () => {
   const dispatch = useDispatch();
@@ -16,7 +17,6 @@ const UserProfile = () => {
   const accessToken = useSelector(
     (state: RootState) => state.auth?.accessToken
   );
-  const queryClient = useQueryClient();
 
   // Local state for form inputs
   const [formData, setFormData] = useState<UserProfileUpdateInput>({
