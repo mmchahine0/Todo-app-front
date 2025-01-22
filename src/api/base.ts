@@ -2,7 +2,7 @@ import axios, { AxiosError } from "axios";
 import { store } from "../redux/persist/persist";
 import { clearCredentials } from "../redux/slices/authSlices";
 import { clearUserData } from "../redux/slices/userSlice";
-import {ENDPOINTS}from "../api/endpoints"
+import { ENDPOINTS } from "../api/endpoints";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
 
@@ -14,7 +14,7 @@ interface ApiOptions {
   params?: unknown;
 }
 
-const BASE_URL = "http://localhost:3500/api/v1";
+const BASE_URL = "https://todo-app-back-gp4v.onrender.com/api/v1";
 
 export const apiClient = async ({
   method,
@@ -87,8 +87,8 @@ export const apiClient = async ({
               refreshAxiosError.response?.status === 401 &&
               refreshAxiosError.response?.data &&
               (refreshAxiosError.response.data as { message: string })
-                .message === "Refresh token has expired")
-            {
+                .message === "Refresh token has expired"
+            ) {
               store.dispatch(clearCredentials());
               store.dispatch(clearUserData());
             }
@@ -107,24 +107,25 @@ export const apiClient = async ({
   }
 };
 const refreshAccessToken = async (refreshToken: string): Promise<string> => {
-  try { 
+  try {
     const response = await axios({
-      method: 'POST',
+      method: "POST",
       url: `${BASE_URL}${ENDPOINTS.Auth.RefreshToken}`,
-      data: { refreshToken }, 
+      data: { refreshToken },
       headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': 'http://localhost:5173'
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin":
+          "https://todo-app-back-gp4v.onrender.com",
       },
-      withCredentials: true
-    }); 
+      withCredentials: true,
+    });
     const accessToken = response.data.data.accessToken;
     if (!accessToken) {
       throw new Error("Access token not found in the refresh response");
     }
     return accessToken;
   } catch (error) {
-    console.error("Failed to refresh token - full error:", error); 
+    console.error("Failed to refresh token - full error:", error);
     throw error;
   }
 };
