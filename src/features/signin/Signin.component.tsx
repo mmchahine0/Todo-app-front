@@ -101,7 +101,6 @@ const Signin = () => {
         dispatch(
           setCredentials({
             accessToken: responseData.accessToken,
-            refreshToken: responseData.refreshToken,
             id: responseData.id,
             _initialized: true,
           })
@@ -110,10 +109,17 @@ const Signin = () => {
           setUserData({
             username: responseData.name,
             email: responseData.email,
+            role: responseData.role,
           })
         );
+        console.log(responseData);
         signinLimiter.reset();
-        navigate("/dashboard/todo");
+
+        const navigation =
+          responseData.role === "ADMIN"
+            ? "/dashboard/admin/users"
+            : "/dashboard/todo";
+        navigate(navigation);
       } else {
         setErrors((prev) => ({
           ...prev,

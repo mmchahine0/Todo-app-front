@@ -53,6 +53,7 @@ const UserProfile = () => {
         setUserData({
           username: updatedUser.name || "",
           email: updatedUser.email,
+          role: updatedUser.role,
         })
       );
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });

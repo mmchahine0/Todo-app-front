@@ -11,4 +11,15 @@ export const ENDPOINTS = {
   User: {
     Profile: "/user/profile",
   },
+  Admin: {
+    Users: "/admin/users",
+    MakeAdmin: (id: string) => `/admin/users/${id}/make-admin`,
+    RevokeAdmin: (id: string) => `/admin/users/${id}/revoke-admin`,
+    Suspend: (id: string) => `/admin/users/${id}/suspend`,
+    Unsuspend: (id: string) => `/admin/users/${id}/unsuspend`,
+  },
+  Content: {
+    Get: "/content",
+    Update: (section: string) => `/admin/content/${section}`,
+  },
 };

@@ -5,6 +5,8 @@ import {
   Home,
   Inbox,
   User2,
+  Users,
+  Laptop,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import * as sidebar from "@/components/ui/sidebar";
@@ -18,7 +20,7 @@ import { clearCredentials } from "@/redux/slices/authSlices";
 import { clearUserData } from "@/redux/slices/userSlice";
 
 // Menu items with proper routes
-const items = [
+const userItems = [
   {
     title: "Home",
     url: "/home",
@@ -35,14 +37,48 @@ const items = [
     icon: Calendar,
   },
 ];
-const helpItems = [
+const userHelpItems = [
   {
     title: "Test",
     url: "/dashboard/help/test",
   },
 ];
 
-export function AppSidebar({ username, isOpen }: AppSidebarProps) {
+const adminItems = [
+  {
+    title: "Home",
+    url: "/home",
+    icon: Home,
+  },
+  {
+    title: "Todo",
+    url: "/dashboard/todo",
+    icon: Inbox,
+  },
+  {
+    title: "Profile",
+    url: "/dashboard/profile",
+    icon: Calendar,
+  },
+  {
+    title: "Users Management",
+    url: "/dashboard/admin/users",
+    icon: Users,
+  },
+  {
+    title: "Layout Management",
+    url: "/dashboard/admin/layout",
+    icon: Laptop,
+  },
+];
+const adminHelpItems = [
+  {
+    title: "Test",
+    url: "/dashboard/help/test",
+  },
+];
+
+export function AppSidebar({ username, role, isOpen }: AppSidebarProps) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const handleSignOut = () => {
@@ -50,6 +86,11 @@ export function AppSidebar({ username, isOpen }: AppSidebarProps) {
     dispatch(clearUserData());
     navigate("/signin");
   };
+
+  // Determine which items to render based on role
+  const sidebarItems = role === "ADMIN" ? adminItems : userItems;
+  const helpItems = role === "ADMIN" ? adminHelpItems : userHelpItems;
+
   return (
     <div className="flex">
       <sidebar.Sidebar collapsible="icon">
@@ -79,7 +120,7 @@ export function AppSidebar({ username, isOpen }: AppSidebarProps) {
             <sidebar.SidebarGroupLabel>Application</sidebar.SidebarGroupLabel>
             <sidebar.SidebarGroupContent>
               <sidebar.SidebarMenu>
-                {items.map((item) => (
+                {sidebarItems.map((item) => (
                   <sidebar.SidebarMenuItem key={item.title}>
                     <sidebar.SidebarMenuButton asChild>
                       <Link to={item.url}>

@@ -1,4 +1,5 @@
 export interface AppSidebarProps {
-    username: string;
-    isOpen: boolean;
-  }
+  username: string;
+  role: string;
+  isOpen: boolean;
+}

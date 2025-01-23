@@ -1,4 +1,4 @@
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import { store } from "../redux/persist/persist";
 import { clearCredentials } from "../redux/slices/authSlices";
 import { clearUserData } from "../redux/slices/userSlice";
@@ -16,6 +16,8 @@ interface ApiOptions {
 
 const BASE_URL = "http://localhost:3500/api/v1";
 
+axios.defaults.withCredentials = true;
+
 export const apiClient = async ({
   method,
   endpoint,
@@ -31,16 +33,9 @@ export const apiClient = async ({
     headers["Authorization"] = `Bearer ${accessToken}`;
   }
 
-  let url = `${BASE_URL}${endpoint}`;
-
-  if (params && method === "GET") {
-    const queryString = new URLSearchParams(params as string).toString();
-    url += `?${queryString}`;
-  }
-
   const options = {
     method,
-    url,
+    url: `${BASE_URL}${endpoint}`,
     headers,
     params,
     data,
@@ -50,81 +45,29 @@ export const apiClient = async ({
     const response = await axios(options);
     return response.data;
   } catch (error) {
-    if (axios.isAxiosError(error)) {
-      const axiosError = error as AxiosError;
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      try {
+        // Attempt to refresh using httpOnly cookie
+        const response = await axios.post(
+          `${BASE_URL}${ENDPOINTS.Auth.RefreshToken}`
+        );
+        const newAccessToken = response.data.data.accessToken;
 
-      // Check if error is due to token expiration (401 status)
-      if (axiosError.response?.status === 401) {
-        const state = store.getState();
-        const refreshToken = state.auth.refreshToken;
-
-        if (!refreshToken) {
-          store.dispatch(clearCredentials());
-          store.dispatch(clearUserData());
-          throw error;
-        }
-
-        try {
-          // Attempt to refresh the access token
-          const newAccessToken = await refreshAccessToken(refreshToken);
-
-          // Retry the original request with new access token
-          const retryOptions = {
-            ...options,
-            headers: {
-              ...headers,
-              Authorization: `Bearer ${newAccessToken}`,
-            },
-          };
-
-          const retryResponse = await axios(retryOptions);
-          return retryResponse.data;
-        } catch (refreshError) {
-          if (axios.isAxiosError(refreshError)) {
-            const refreshAxiosError = refreshError as AxiosError;
-            // If refresh token has expired, clear auth state
-            if (
-              refreshAxiosError.response?.status === 401 &&
-              refreshAxiosError.response?.data &&
-              (refreshAxiosError.response.data as { message: string })
-                .message === "Refresh token has expired"
-            ) {
-              store.dispatch(clearCredentials());
-              store.dispatch(clearUserData());
-            }
-          }
-          throw refreshError;
-        }
+        // Retry original request
+        const retryResponse = await axios({
+          ...options,
+          headers: {
+            ...headers,
+            Authorization: `Bearer ${newAccessToken}`,
+          },
+        });
+        return retryResponse.data;
+      } catch (refreshError) {
+        store.dispatch(clearCredentials());
+        store.dispatch(clearUserData());
+        throw refreshError;
       }
     }
-
-    if (error instanceof Error) {
-      console.error("API Error:", error.message);
-    } else {
-      console.error("API Error:", "An unknown error occurred");
-    }
-    throw error;
-  }
-};
-const refreshAccessToken = async (refreshToken: string): Promise<string> => {
-  try {
-    const response = await axios({
-      method: "POST",
-      url: `${BASE_URL}${ENDPOINTS.Auth.RefreshToken}`,
-      data: { refreshToken },
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "http://localhost:3500",
-      },
-      withCredentials: true,
-    });
-    const accessToken = response.data.data.accessToken;
-    if (!accessToken) {
-      throw new Error("Access token not found in the refresh response");
-    }
-    return accessToken;
-  } catch (error) {
-    console.error("Failed to refresh token - full error:", error);
     throw error;
   }
 };

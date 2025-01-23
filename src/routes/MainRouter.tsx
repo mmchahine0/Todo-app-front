@@ -6,11 +6,14 @@ import TodoDashboard from "../features/todo/Todo.component";
 import NotFound from "@/features/notFound/notFound";
 import Home from "../features/home/Home.component";
 import { ProtectedRoute } from "./ProtectedRoute";
+import { AdminRoute } from "./AdminProtectedRoutes";
 import Layout from "@/features/sidebar/Layout";
 import Test from "../features/Test";
 import UserProfile from "../features/userProfile/User.component";
 import TestDashboard from "@/features/dashboard/TestDashboard";
 import TestHelp from "@/features/help/TestHelp";
+import AdminDashboard from "@/features/admin/adminDashboard/AdminDashboard.component";
+import AdminLayout from "@/features/admin/adminEditLayout/AdminLayout.component";
 
 const MainRouter: React.FC = () => {
   return (
@@ -20,7 +23,7 @@ const MainRouter: React.FC = () => {
         <Route path="/login" element={<SigninComponent />} />
         <Route path="/signup" element={<SignupComponent />} />
         <Route element={<Layout />}>
-          {/* Protected Routes with Sidebar */}
+          {/* Protected USER Routes with Sidebar */}
           <Route
             path="/dashboard/todo"
             element={
@@ -59,6 +62,25 @@ const MainRouter: React.FC = () => {
               <ProtectedRoute>
                 <TestHelp />
               </ProtectedRoute>
+            }
+          />
+        </Route>
+        {/* Protected ADMIN Routes with Sidebar */}
+        <Route element={<Layout />}>
+          <Route
+            path="/dashboard/admin/users"
+            element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/dashboard/admin/layout"
+            element={
+              <AdminRoute>
+                <AdminLayout />
+              </AdminRoute>
             }
           />
         </Route>

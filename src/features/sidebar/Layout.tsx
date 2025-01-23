@@ -7,7 +7,7 @@ import { BreadcrumbComponent } from "./BreadcrumbComponent";
 import { useState } from "react";
 
 export default function Layout() {
-  const { username } = useSelector((state: RootState) => state.userdata);
+  const { username, role } = useSelector((state: RootState) => state.userdata);
   const [open, setOpen] = useState(true);
 
   return (
@@ -15,7 +15,7 @@ export default function Layout() {
       <div className="flex min-h-screen w-full">
         {/* Sidebar */}
         <div className="flex-shrink-0">
-          <AppSidebar username={username} isOpen={open} />
+          <AppSidebar username={username} role={role} isOpen={open} />
         </div>
 
         {/* Main content */}
