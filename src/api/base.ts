@@ -14,7 +14,7 @@ interface ApiOptions {
   params?: unknown;
 }
 
-const BASE_URL = "https://todo-app-back-gp4v.onrender.com/api/v1";
+const BASE_URL = "http://localhost:3500/api/v1";
 
 export const apiClient = async ({
   method,
@@ -114,8 +114,7 @@ const refreshAccessToken = async (refreshToken: string): Promise<string> => {
       data: { refreshToken },
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin":
-          "https://todo-app-back-gp4v.onrender.com",
+        "Access-Control-Allow-Origin": "http://localhost:3500",
       },
       withCredentials: true,
     });

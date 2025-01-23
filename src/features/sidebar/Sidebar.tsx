@@ -20,8 +20,8 @@ import { clearUserData } from "@/redux/slices/userSlice";
 // Menu items with proper routes
 const items = [
   {
-    title: "Test",
-    url: "/dashboard/test",
+    title: "Home",
+    url: "/home",
     icon: Home,
   },
   {
