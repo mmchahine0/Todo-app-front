@@ -1,4 +1,3 @@
-// AdminLayout.component.tsx
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/persist/persist";
@@ -22,9 +21,14 @@ const ContentManagement = () => {
   });
 
   const [navItems, setNavItems] = useState<NavItem[]>([]);
-  const [heroContent, setHeroContent] = useState<HeroContent | null>(null);
-  const [footerContent, setFooterContent] = useState<FooterContent | null>(
-    null
+  const [heroContent, setHeroContent] = useState<HeroContent>({title: "",
+    subtitle: "",
+    buttonText: "",
+    buttonLink: ""});
+  const [footerContent, setFooterContent] = useState<FooterContent>({
+    companyName: "",
+    description: "",
+    links: []}
   );
 
   useEffect(() => {
@@ -50,7 +54,7 @@ const ContentManagement = () => {
   }, [data]);
 
   const updateMutation = useMutation({
-    mutationFn: ({ section, content }: { section: string; content: any }) =>
+    mutationFn: ({ section, content }: { section: string; content: object }) =>
       updateContent(section, content, accessToken),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["content"] });
@@ -62,7 +66,7 @@ const ContentManagement = () => {
   });
 
   const addNavItem = () => {
-    setNavItems([...navItems, { label: "", path: "" }]);
+    setNavItems([...navItems, { label: "", path: "",visibility: 'logged-out'}]);
   };
 
   const removeNavItem = (index: number) => {
@@ -100,34 +104,50 @@ const ContentManagement = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {navItems.map((item, index) => (
-              <div key={index} className="flex gap-4">
-                <Input
-                  placeholder="Label"
-                  value={item.label}
-                  onChange={(e) => {
-                    const newItems = [...navItems];
-                    newItems[index].label = e.target.value;
-                    setNavItems(newItems);
-                  }}
-                />
-                <Input
-                  placeholder="Path"
-                  value={item.path}
-                  onChange={(e) => {
-                    const newItems = [...navItems];
-                    newItems[index].path = e.target.value;
-                    setNavItems(newItems);
-                  }}
-                />
-                <Button
-                  variant="destructive"
-                  onClick={() => removeNavItem(index)}
-                >
-                  Remove
-                </Button>
-              </div>
-            ))}
+          {navItems.map((item, index) => (
+  <div key={index} className="flex gap-4">
+    <Input
+      placeholder="Label"
+      value={item.label}
+      onChange={(e) => {
+        const newItems = [...navItems];
+        newItems[index].label = e.target.value;
+        setNavItems(newItems);
+      }}
+    />
+    <Input
+      placeholder="Path"
+      value={item.path}
+      onChange={(e) => {
+        const newItems = [...navItems];
+        newItems[index].path = e.target.value;
+        setNavItems(newItems);
+      }}
+    />
+    <div className="flex items-center space-x-2">
+      <label>Visibility:</label>
+      <select 
+        value={item.visibility}
+        onChange={(e) => {
+          const newItems = [...navItems];
+          newItems[index].visibility = e.target.value as 'logged-in' | 'logged-out' | 'all';
+          setNavItems(newItems);
+        }}
+        className="border rounded px-2 py-1"
+      >
+        <option value="all">All Users</option>
+        <option value="logged-in">Logged In Only</option>
+        <option value="logged-out">Logged Out Only</option>
+      </select>
+    </div>
+    <Button
+      variant="destructive"
+      onClick={() => removeNavItem(index)}
+    >
+      Remove
+    </Button>
+  </div>
+))}
             <div className="flex gap-4">
               <Button onClick={addNavItem}>Add Navigation Item</Button>
               <Button onClick={handleNavUpdate}>Update Navigation</Button>

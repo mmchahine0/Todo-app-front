@@ -4,14 +4,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { clearCredentials } from "../../redux/slices/authSlices";
 import { clearUserData } from "../../redux/slices/userSlice";
-import { getContent } from "../../features/admin/adminEditLayout/AdminLayout.services";
+import { getContent } from "../admin/adminHomeEditLayout/AdminLayout.services";
 
 const Home: React.FC = () => {
   const { data } = useQuery({
     queryKey: ["content"],
     queryFn: () => getContent(""),
   });
-
+  console.log(data)
   return (
     <div>
       <Navbar customLinks={data?.data?.navbar || []} />
@@ -21,7 +21,7 @@ const Home: React.FC = () => {
   );
 };
 
-const Navbar: React.FC<{ customLinks: { label: string; path: string }[] }> = ({
+const Navbar: React.FC<{ customLinks: { label: string; path: string;visibility: 'logged-in' | 'logged-out' | 'all' }[] }> = ({
   customLinks = [],
 }) => {
   const dispatch = useDispatch();
@@ -34,29 +34,25 @@ const Navbar: React.FC<{ customLinks: { label: string; path: string }[] }> = ({
     navigate("/login");
   };
 
+  const loggedInLinks = customLinks.filter((link) => link.visibility === 'all' || link.visibility === 'logged-in');
+  const loggedOutLinks = customLinks.filter((link) => link.visibility === 'all' || link.visibility === 'logged-out');
+
   return (
     <nav className="bg-gray-800 p-4">
       <div className="container mx-auto flex justify-between items-center">
         <div className="text-white text-lg font-bold">MyApp</div>
         <div className="space-x-4">
-          {Array.isArray(customLinks) &&
-            customLinks.map((link, index) => (
-              <Link
-                key={index}
-                to={link.path}
-                className="text-gray-300 hover:text-white"
-              >
-                {link.label}
-              </Link>
-            ))}
           {accessToken ? (
             <>
-              <Link
-                to="/dashboard/todo"
-                className="text-gray-300 hover:text-white"
-              >
-                Dashboard
-              </Link>
+              {loggedInLinks.map((link, index) => (
+                <Link
+                  key={index}
+                  to={link.path}
+                  className="text-gray-300 hover:text-white"
+                >
+                  {link.label}
+                </Link>
+              ))}
               <button
                 onClick={handleSignOut}
                 className="text-gray-300 hover:text-white"
@@ -66,12 +62,15 @@ const Navbar: React.FC<{ customLinks: { label: string; path: string }[] }> = ({
             </>
           ) : (
             <>
-              <Link to="/login" className="text-gray-300 hover:text-white">
-                Sign In
-              </Link>
-              <Link to="/signup" className="text-gray-300 hover:text-white">
-                Sign Up
-              </Link>
+              {loggedOutLinks.map((link, index) => (
+                <Link
+                  key={index}
+                  to={link.path}
+                  className="text-gray-300 hover:text-white"
+                >
+                  {link.label}
+                </Link>
+              ))}
             </>
           )}
         </div>
@@ -92,16 +91,16 @@ const HeroSection: React.FC<{
     <section className="bg-gray-100 py-20 min-h-screen flex items-center">
       <div className="container mx-auto text-center">
         <h1 className="text-4xl font-bold mb-4">
-          {content?.title ?? "Welcome to MyApp"}
+          {content?.title ?? " "}
         </h1>
         <p className="text-lg text-gray-700 mb-8">
-          {content?.subtitle ?? "Your one-stop solution for all your needs."}
+          {content?.subtitle ?? " "}
         </p>
         <Link
-          to={content?.buttonLink ?? "/signup"}
+          to={content?.buttonLink ?? " "}
           className="bg-blue-500 text-white px-6 py-3 rounded-full hover:bg-blue-600"
         >
-          {content?.buttonText ?? "Get Started"}
+          {content?.buttonText ?? " "}
         </Link>
       </div>
     </section>
@@ -119,10 +118,10 @@ const Footer: React.FC<{
     <footer className="bg-gray-800 text-white py-8">
       <div className="container mx-auto text-center">
         <h3 className="text-xl font-bold mb-2">
-          {content?.companyName ?? "MyApp"}
+          {content?.companyName ?? " "}
         </h3>
         <p className="mb-4">
-          {content?.description ?? "© 2024 All rights reserved."}
+          {content?.description ?? " "}
         </p>
         <div className="space-x-4">
           {content?.links?.map((link, index) => (

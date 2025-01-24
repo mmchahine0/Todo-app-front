@@ -1,6 +1,7 @@
 export interface NavItem {
   label: string;
   path: string;
+  visibility: 'logged-in' | 'logged-out' | 'all';
 }
 
 export interface HeroContent {

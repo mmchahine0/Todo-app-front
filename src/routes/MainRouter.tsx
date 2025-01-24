@@ -13,7 +13,9 @@ import UserProfile from "../features/userProfile/User.component";
 import TestDashboard from "@/features/dashboard/TestDashboard";
 import TestHelp from "@/features/help/TestHelp";
 import AdminDashboard from "@/features/admin/adminDashboard/AdminDashboard.component";
-import AdminLayout from "@/features/admin/adminEditLayout/AdminLayout.component";
+import AdminLayout from "@/features/admin/adminHomeEditLayout/AdminLayout.component";
+import Admin from "../features/admin/Admin"
+import LayoutCreation from "../features/admin/LayoutCreation"
 
 const MainRouter: React.FC = () => {
   return (
@@ -67,6 +69,22 @@ const MainRouter: React.FC = () => {
         </Route>
         {/* Protected ADMIN Routes with Sidebar */}
         <Route element={<Layout />}>
+        <Route
+            path="/dashboard/admin"
+            element={
+              <AdminRoute>
+                <Admin />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/dashboard/admin/layout"
+            element={
+              <AdminRoute>
+                <LayoutCreation />
+              </AdminRoute>
+            }
+          />
           <Route
             path="/dashboard/admin/users"
             element={
@@ -76,7 +94,7 @@ const MainRouter: React.FC = () => {
             }
           />
           <Route
-            path="/dashboard/admin/layout"
+            path="/dashboard/admin/layout/home"
             element={
               <AdminRoute>
                 <AdminLayout />
