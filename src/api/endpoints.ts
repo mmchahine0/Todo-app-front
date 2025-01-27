@@ -17,6 +17,14 @@ export const ENDPOINTS = {
     RevokeAdmin: (id: string) => `/admin/users/${id}/revoke-admin`,
     Suspend: (id: string) => `/admin/users/${id}/suspend`,
     Unsuspend: (id: string) => `/admin/users/${id}/unsuspend`,
+    Pages: {
+      List: "/admin/pages",
+      Create: "/admin/pages",
+      Update: (id: string) => `/admin/pages/${id}`,
+      Delete: (id: string) => `/admin/pages/${id}`,
+      GetRoutes: "/admin/routes",
+      Published: "/pages/published"
+    },
   },
   Content: {
     Get: "/content",

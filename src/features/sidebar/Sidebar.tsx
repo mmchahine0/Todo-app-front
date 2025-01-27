@@ -7,6 +7,7 @@ import {
   User2,
   Users,
   Laptop,
+  HousePlus
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import * as sidebar from "@/components/ui/sidebar";
@@ -69,6 +70,11 @@ const adminItems = [
     title: "Layout Management",
     url: "/dashboard/admin/layout",
     icon: Laptop,
+  },
+  {
+    title: "Home Management",
+    url: "/dashboard/admin/layout/home",
+    icon: HousePlus,
   },
 ];
 const adminHelpItems = [

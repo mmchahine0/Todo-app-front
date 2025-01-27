@@ -1,5 +1,6 @@
 const TestDashboard = () => {
-  return <></>;
+  return <>
+  </>;
 };
 
 export default TestDashboard;

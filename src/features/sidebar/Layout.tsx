@@ -6,7 +6,11 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { BreadcrumbComponent } from "./BreadcrumbComponent";
 import { useState } from "react";
 
-export default function Layout() {
+interface LayoutProps {
+  children?: React.ReactNode;
+}
+
+export default function Layout({ children }: LayoutProps) {
   const { username, role } = useSelector((state: RootState) => state.userdata);
   const [open, setOpen] = useState(true);
 
@@ -27,7 +31,7 @@ export default function Layout() {
 
           {/* Page content */}
           <main className="pt-16 p-2">
-            <Outlet />
+            {children || <Outlet />}
           </main>
         </div>
       </div>
