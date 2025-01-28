@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
 import { queryClient } from "@/lib/queryClient";
 import { NavItem, HeroContent, FooterContent } from "./AdminLayout.types";
+import axios from "axios";
 
 const ContentManagement = () => {
   const { toast } = useToast();
@@ -21,15 +22,17 @@ const ContentManagement = () => {
   });
 
   const [navItems, setNavItems] = useState<NavItem[]>([]);
-  const [heroContent, setHeroContent] = useState<HeroContent>({title: "",
+  const [heroContent, setHeroContent] = useState<HeroContent>({
+    title: "",
     subtitle: "",
     buttonText: "",
-    buttonLink: ""});
+    buttonLink: "",
+  });
   const [footerContent, setFooterContent] = useState<FooterContent>({
     companyName: "",
     description: "",
-    links: []}
-  );
+    links: [],
+  });
 
   useEffect(() => {
     if (data?.data) {
@@ -63,10 +66,22 @@ const ContentManagement = () => {
         description: "Content updated successfully",
       });
     },
+    onError: (error: unknown) => {
+      if (axios.isAxiosError(error)) {
+        toast({
+          title: "Error",
+          description:
+            error.response?.data?.message || "Failed to update content",
+        });
+      }
+    },
   });
 
   const addNavItem = () => {
-    setNavItems([...navItems, { label: "", path: "",visibility: 'logged-out'}]);
+    setNavItems([
+      ...navItems,
+      { label: "", path: "", visibility: "logged-out" },
+    ]);
   };
 
   const removeNavItem = (index: number) => {
@@ -104,50 +119,53 @@ const ContentManagement = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-          {navItems.map((item, index) => (
-  <div key={index} className="flex gap-4">
-    <Input
-      placeholder="Label"
-      value={item.label}
-      onChange={(e) => {
-        const newItems = [...navItems];
-        newItems[index].label = e.target.value;
-        setNavItems(newItems);
-      }}
-    />
-    <Input
-      placeholder="Path"
-      value={item.path}
-      onChange={(e) => {
-        const newItems = [...navItems];
-        newItems[index].path = e.target.value;
-        setNavItems(newItems);
-      }}
-    />
-    <div className="flex items-center space-x-2">
-      <label>Visibility:</label>
-      <select 
-        value={item.visibility}
-        onChange={(e) => {
-          const newItems = [...navItems];
-          newItems[index].visibility = e.target.value as 'logged-in' | 'logged-out' | 'all';
-          setNavItems(newItems);
-        }}
-        className="border rounded px-2 py-1"
-      >
-        <option value="all">All Users</option>
-        <option value="logged-in">Logged In Only</option>
-        <option value="logged-out">Logged Out Only</option>
-      </select>
-    </div>
-    <Button
-      variant="destructive"
-      onClick={() => removeNavItem(index)}
-    >
-      Remove
-    </Button>
-  </div>
-))}
+            {navItems.map((item, index) => (
+              <div key={index} className="flex gap-4">
+                <Input
+                  placeholder="Label"
+                  value={item.label}
+                  onChange={(e) => {
+                    const newItems = [...navItems];
+                    newItems[index].label = e.target.value;
+                    setNavItems(newItems);
+                  }}
+                />
+                <Input
+                  placeholder="Path"
+                  value={item.path}
+                  onChange={(e) => {
+                    const newItems = [...navItems];
+                    newItems[index].path = e.target.value;
+                    setNavItems(newItems);
+                  }}
+                />
+                <div className="flex items-center space-x-2">
+                  <label>Visibility:</label>
+                  <select
+                    value={item.visibility}
+                    onChange={(e) => {
+                      const newItems = [...navItems];
+                      newItems[index].visibility = e.target.value as
+                        | "logged-in"
+                        | "logged-out"
+                        | "all";
+                      setNavItems(newItems);
+                    }}
+                    className="border rounded px-2 py-1"
+                  >
+                    <option value="all">All Users</option>
+                    <option value="logged-in">Logged In Only</option>
+                    <option value="logged-out">Logged Out Only</option>
+                  </select>
+                </div>
+                <Button
+                  variant="destructive"
+                  onClick={() => removeNavItem(index)}
+                >
+                  Remove
+                </Button>
+              </div>
+            ))}
             <div className="flex gap-4">
               <Button onClick={addNavItem}>Add Navigation Item</Button>
               <Button onClick={handleNavUpdate}>Update Navigation</Button>
