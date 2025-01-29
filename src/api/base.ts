@@ -14,7 +14,7 @@ interface ApiOptions {
   params?: unknown;
 }
 
-const BASE_URL = "http://localhost:3500/api/v1";
+const BASE_URL = "https://todo-app-back-gp4v.onrender.com/api/v1";
 
 axios.defaults.withCredentials = true;
 
