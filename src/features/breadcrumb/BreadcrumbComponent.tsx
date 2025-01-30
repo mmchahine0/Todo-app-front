@@ -27,7 +27,12 @@ export const BreadcrumbComponent = () => {
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
-            <Link to={"/home"}>Home</Link>
+            <Link
+              to={"/home"}
+              className="text-[#16C47F] hover:text-[#16C47F]/80 transition-colors"
+            >
+              Home
+            </Link>
           </BreadcrumbLink>
         </BreadcrumbItem>
         {pathnames.map((value, index) => {
@@ -38,13 +43,20 @@ export const BreadcrumbComponent = () => {
 
           return (
             <React.Fragment key={to}>
-              <BreadcrumbSeparator />
+              <BreadcrumbSeparator className="text-[#FFD65A]" />
               <BreadcrumbItem>
                 {isLast || !clickable ? (
-                  <BreadcrumbPage>{displayValue}</BreadcrumbPage>
+                  <BreadcrumbPage className="text-gray-500">
+                    {displayValue}
+                  </BreadcrumbPage>
                 ) : (
                   <BreadcrumbLink asChild>
-                    <Link to={to}>{displayValue}</Link>
+                    <Link
+                      to={to}
+                      className="text-[#16C47F] hover:text-[#16C47F]/80 transition-colors"
+                    >
+                      {displayValue}
+                    </Link>
                   </BreadcrumbLink>
                 )}
               </BreadcrumbItem>

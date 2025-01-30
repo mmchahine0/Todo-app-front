@@ -78,6 +78,7 @@ const Signin = () => {
       toast({
         title: "Too many attempts",
         description: `Please try again in ${minutes} minutes`,
+        variant: "destructive",
         duration: 2000,
       });
       return;
@@ -112,7 +113,6 @@ const Signin = () => {
             role: responseData.role,
           })
         );
-        console.log(responseData);
         signinLimiter.reset();
 
         const navigation =

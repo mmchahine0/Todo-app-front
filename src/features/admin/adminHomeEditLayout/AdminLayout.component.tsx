@@ -7,10 +7,28 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { queryClient } from "@/lib/queryClient";
 import { NavItem, HeroContent, FooterContent } from "./AdminLayout.types";
 import axios from "axios";
+import _ from "lodash";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+interface DeleteConfirmState {
+  isOpen: boolean;
+  type: "nav" | "footer" | null;
+  index: number;
+  itemLabel: string;
+}
 
 const ContentManagement = () => {
   const { toast } = useToast();
@@ -19,42 +37,74 @@ const ContentManagement = () => {
   const { data, isLoading } = useQuery({
     queryKey: ["content"],
     queryFn: () => getContent(accessToken),
+    enabled: !!accessToken,
+  });
+
+  const [deleteConfirm, setDeleteConfirm] = useState<DeleteConfirmState>({
+    isOpen: false,
+    type: null,
+    index: -1,
+    itemLabel: "",
   });
 
   const [navItems, setNavItems] = useState<NavItem[]>([]);
+  const [originalNavItems, setOriginalNavItems] = useState<NavItem[]>([]);
+
   const [heroContent, setHeroContent] = useState<HeroContent>({
     title: "",
     subtitle: "",
     buttonText: "",
     buttonLink: "",
   });
+  const [originalHeroContent, setOriginalHeroContent] = useState<HeroContent>({
+    title: "",
+    subtitle: "",
+    buttonText: "",
+    buttonLink: "",
+  });
+
   const [footerContent, setFooterContent] = useState<FooterContent>({
     companyName: "",
     description: "",
     links: [],
   });
+  const [originalFooterContent, setOriginalFooterContent] =
+    useState<FooterContent>({
+      companyName: "",
+      description: "",
+      links: [],
+    });
+
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   useEffect(() => {
     if (data?.data) {
       const navbar = Array.isArray(data.data.navbar) ? data.data.navbar : [];
       setNavItems(navbar);
-      setHeroContent(
-        data.data.hero || {
-          title: "",
-          subtitle: "",
-          buttonText: "",
-          buttonLink: "",
-        }
-      );
-      setFooterContent(
-        data.data.footer || {
-          companyName: "",
-          description: "",
-          links: [],
-        }
-      );
+      setOriginalNavItems(_.cloneDeep(navbar));
+
+      const hero = data.data.hero || {
+        title: "",
+        subtitle: "",
+        buttonText: "",
+        buttonLink: "",
+      };
+      setHeroContent(hero);
+      setOriginalHeroContent(_.cloneDeep(hero));
+
+      const footer = data.data.footer || {
+        companyName: "",
+        description: "",
+        links: [],
+      };
+      setFooterContent(footer);
+      setOriginalFooterContent(_.cloneDeep(footer));
     }
   }, [data]);
+
+  const hasChanges = useCallback((current: object, original: object) => {
+    return !_.isEqual(current, original);
+  }, []);
 
   const updateMutation = useMutation({
     mutationFn: ({ section, content }: { section: string; content: object }) =>
@@ -72,10 +122,42 @@ const ContentManagement = () => {
           title: "Error",
           description:
             error.response?.data?.message || "Failed to update content",
+          variant: "destructive",
         });
       }
     },
   });
+
+  const handleDeleteConfirm = () => {
+    if (deleteConfirm.type === "nav") {
+      setNavItems(navItems.filter((_, i) => i !== deleteConfirm.index));
+    } else if (deleteConfirm.type === "footer") {
+      const newLinks = footerContent?.links.filter(
+        (_, i) => i !== deleteConfirm.index
+      );
+      setFooterContent(
+        (prev) =>
+          ({
+            ...prev,
+            links: newLinks,
+          } as FooterContent)
+      );
+    }
+    setDeleteConfirm({ isOpen: false, type: null, index: -1, itemLabel: "" });
+  };
+
+  const handleDeleteRequest = (
+    type: "nav" | "footer",
+    index: number,
+    label: string
+  ) => {
+    setDeleteConfirm({
+      isOpen: true,
+      type,
+      index,
+      itemLabel: label.trim() || "this item",
+    });
+  };
 
   const addNavItem = () => {
     setNavItems([
@@ -84,11 +166,40 @@ const ContentManagement = () => {
     ]);
   };
 
-  const removeNavItem = (index: number) => {
-    setNavItems(navItems.filter((_, i) => i !== index));
+  const validateNavItems = (items: NavItem[]): string[] => {
+    const errors: string[] = [];
+    items.forEach((item, index) => {
+      if (!item.label.trim() && item.path.trim()) {
+        errors.push(
+          `Item ${index + 1}: Label is required when path is provided.`
+        );
+      }
+      if (item.label.trim() && !item.path.trim()) {
+        errors.push(
+          `Item ${index + 1}: Path is required when label is provided.`
+        );
+      }
+    });
+    return errors;
   };
 
   const handleNavUpdate = () => {
+    const errors = validateNavItems(navItems);
+    if (errors.length > 0) {
+      setValidationErrors(errors);
+      return;
+    }
+    setValidationErrors([]);
+
+    if (!hasChanges(navItems, originalNavItems)) {
+      toast({
+        title: "Info",
+        description: "No changes detected in navigation items",
+        variant: "destructive",
+      });
+      return;
+    }
+
     updateMutation.mutate({
       section: "navbar",
       content: navItems,
@@ -96,6 +207,15 @@ const ContentManagement = () => {
   };
 
   const handleHeroUpdate = () => {
+    if (!hasChanges(heroContent, originalHeroContent)) {
+      toast({
+        title: "Info",
+        description: "No changes detected in hero content",
+        variant: "destructive",
+      });
+      return;
+    }
+
     updateMutation.mutate({
       section: "hero",
       content: heroContent,
@@ -103,6 +223,15 @@ const ContentManagement = () => {
   };
 
   const handleFooterUpdate = () => {
+    if (!hasChanges(footerContent, originalFooterContent)) {
+      toast({
+        title: "Info",
+        description: "No changes detected in footer content",
+        variant: "destructive",
+      });
+      return;
+    }
+
     updateMutation.mutate({
       section: "footer",
       content: footerContent,
@@ -119,6 +248,13 @@ const ContentManagement = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
+            {validationErrors.length > 0 && (
+              <div className="text-red-500">
+                {validationErrors.map((error, index) => (
+                  <div key={index}>{error}</div>
+                ))}
+              </div>
+            )}
             {navItems.map((item, index) => (
               <div key={index} className="flex gap-4">
                 <Input
@@ -160,7 +296,7 @@ const ContentManagement = () => {
                 </div>
                 <Button
                   variant="destructive"
-                  onClick={() => removeNavItem(index)}
+                  onClick={() => handleDeleteRequest("nav", index, item.label)}
                 >
                   Remove
                 </Button>
@@ -173,6 +309,7 @@ const ContentManagement = () => {
           </div>
         </CardContent>
       </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Hero Section</CardTitle>
@@ -293,18 +430,9 @@ const ContentManagement = () => {
                   />
                   <Button
                     variant="destructive"
-                    onClick={() => {
-                      const newLinks = footerContent?.links.filter(
-                        (_, i) => i !== index
-                      );
-                      setFooterContent(
-                        (prev) =>
-                          ({
-                            ...prev,
-                            links: newLinks,
-                          } as FooterContent)
-                      );
-                    }}
+                    onClick={() =>
+                      handleDeleteRequest("footer", index, link.label)
+                    }
                   >
                     Remove
                   </Button>
@@ -314,7 +442,7 @@ const ContentManagement = () => {
                 onClick={() => {
                   const newLinks = [
                     ...(footerContent?.links || []),
-                    { label: "", path: "" },
+                    { label: "", path: "", visibility: "all" },
                   ];
                   setFooterContent(
                     (prev) =>
@@ -332,6 +460,30 @@ const ContentManagement = () => {
           </div>
         </CardContent>
       </Card>
+
+      <AlertDialog
+        open={deleteConfirm.isOpen}
+        onOpenChange={(isOpen) =>
+          setDeleteConfirm((prev) => ({ ...prev, isOpen }))
+        }
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete{" "}
+              <span className="text-black">{deleteConfirm.itemLabel}</span>?
+              This action cannot be undone until you save your changes.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

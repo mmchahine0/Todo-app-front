@@ -1,6 +1,10 @@
 import { apiClient } from "../../../api/base";
 import { ENDPOINTS } from "../../../api/endpoints";
-import { CreatePageInput, DynamicPagesResponse, Route } from "../../../routes/dynamicPages/DynamicPages.types";
+import {
+  CreatePageInput,
+  DynamicPagesResponse,
+  Route,
+} from "../../dynamicPages/DynamicPages.types";
 
 export const getAllRoutes = async (accessToken: string): Promise<Route[]> => {
   const response = await apiClient({
@@ -11,7 +15,9 @@ export const getAllRoutes = async (accessToken: string): Promise<Route[]> => {
   return response as Route[];
 };
 
-export const getAllPages = async (accessToken: string): Promise<DynamicPagesResponse> => {
+export const getAllPages = async (
+  accessToken: string
+): Promise<DynamicPagesResponse> => {
   const response = await apiClient({
     method: "GET",
     endpoint: ENDPOINTS.Admin.Pages.List,
@@ -20,7 +26,9 @@ export const getAllPages = async (accessToken: string): Promise<DynamicPagesResp
   return response as DynamicPagesResponse;
 };
 
-export const getPublishedPages = async (accessToken: string): Promise<DynamicPagesResponse> => {
+export const getPublishedPages = async (
+  accessToken: string
+): Promise<DynamicPagesResponse> => {
   const response = await apiClient({
     method: "GET",
     endpoint: ENDPOINTS.Admin.Pages.Published,

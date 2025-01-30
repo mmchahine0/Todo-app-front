@@ -18,6 +18,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -27,15 +37,34 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { getAllPages, createPage, updatePage, deletePage } from "./LayoutCreation.services";
-import { DynamicPage, CreatePageInput } from "../../../routes/dynamicPages/DynamicPages.types";
+import {
+  getAllPages,
+  createPage,
+  updatePage,
+  deletePage,
+} from "./LayoutCreation.services";
+import {
+  DynamicPage,
+  CreatePageInput,
+} from "../../dynamicPages/DynamicPages.types";
 import { queryClient } from "@/lib/queryClient";
+
+interface DeleteConfirmState {
+  isOpen: boolean;
+  pageId: string;
+  pageTitle: string;
+}
 
 const LayoutCreation = () => {
   const { toast } = useToast();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingPage, setEditingPage] = useState<DynamicPage | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<DeleteConfirmState>({
+    isOpen: false,
+    pageId: "",
+    pageTitle: "",
+  });
   const [newPage, setNewPage] = useState<CreatePageInput>({
     title: "",
     path: "",
@@ -45,11 +74,14 @@ const LayoutCreation = () => {
     },
   });
 
-  const accessToken = useSelector((state: RootState) => state.auth?.accessToken);
+  const accessToken = useSelector(
+    (state: RootState) => state.auth?.accessToken
+  );
 
   const { data: pages, isLoading: pagesLoading } = useQuery({
     queryKey: ["pages"],
     queryFn: () => getAllPages(accessToken),
+    enabled: !!accessToken,
   });
 
   const createMutation = useMutation({
@@ -74,6 +106,7 @@ const LayoutCreation = () => {
       toast({
         title: "Error",
         description: "Failed to create page",
+        variant: "destructive",
         duration: 2000,
       });
     },
@@ -94,6 +127,7 @@ const LayoutCreation = () => {
       toast({
         title: "Error",
         description: "Failed to update page",
+        variant: "destructive",
         duration: 2000,
       });
     },
@@ -107,11 +141,13 @@ const LayoutCreation = () => {
         title: "Success",
         description: "Page deleted successfully",
       });
+      setDeleteConfirm({ isOpen: false, pageId: "", pageTitle: "" });
     },
     onError: () => {
       toast({
         title: "Error",
         description: "Failed to delete page",
+        variant: "destructive",
         duration: 2000,
       });
     },
@@ -119,7 +155,9 @@ const LayoutCreation = () => {
 
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const formattedPath = newPage.path.startsWith('/') ? newPage.path : `/${newPage.path}`;
+    const formattedPath = newPage.path.startsWith("/")
+      ? newPage.path
+      : `/${newPage.path}`;
     createMutation.mutate({
       ...newPage,
       path: formattedPath,
@@ -129,17 +167,27 @@ const LayoutCreation = () => {
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingPage) return;
-    
-    const formattedPath = editingPage.path.startsWith('/') ? editingPage.path : `/${editingPage.path}`;
+
+    const formattedPath = editingPage.path.startsWith("/")
+      ? editingPage.path
+      : `/${editingPage.path}`;
     updateMutation.mutate({
       ...editingPage,
       path: formattedPath,
     });
   };
 
-  const handleDelete = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this page?')) {
-      deleteMutation.mutate(id);
+  const handleDeleteRequest = (page: DynamicPage) => {
+    setDeleteConfirm({
+      isOpen: true,
+      pageId: page.id,
+      pageTitle: page.title,
+    });
+  };
+
+  const handleDeleteConfirm = () => {
+    if (deleteConfirm.pageId) {
+      deleteMutation.mutate(deleteConfirm.pageId);
     }
   };
 
@@ -152,7 +200,7 @@ const LayoutCreation = () => {
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Layout Management</h1>
-        
+
         {/* Create Dialog */}
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
@@ -167,7 +215,9 @@ const LayoutCreation = () => {
                 <label className="text-sm font-medium">Title</label>
                 <Input
                   value={newPage.title}
-                  onChange={(e) => setNewPage({ ...newPage, title: e.target.value })}
+                  onChange={(e) =>
+                    setNewPage({ ...newPage, title: e.target.value })
+                  }
                   placeholder="Enter page title"
                   required
                 />
@@ -176,7 +226,9 @@ const LayoutCreation = () => {
                 <label className="text-sm font-medium">Path</label>
                 <Input
                   value={newPage.path}
-                  onChange={(e) => setNewPage({ ...newPage, path: e.target.value })}
+                  onChange={(e) =>
+                    setNewPage({ ...newPage, path: e.target.value })
+                  }
                   placeholder="/dashboard/custom-page"
                   required
                 />
@@ -219,11 +271,17 @@ const LayoutCreation = () => {
               <div className="space-y-2">
                 <label className="text-sm font-medium">Title</label>
                 <Input
-                  value={editingPage?.title || ''}
-                  onChange={(e) => setEditingPage(editingPage ? { 
-                    ...editingPage, 
-                    title: e.target.value 
-                  } : null)}
+                  value={editingPage?.title || ""}
+                  onChange={(e) =>
+                    setEditingPage(
+                      editingPage
+                        ? {
+                            ...editingPage,
+                            title: e.target.value,
+                          }
+                        : null
+                    )
+                  }
                   placeholder="Enter page title"
                   required
                 />
@@ -231,11 +289,17 @@ const LayoutCreation = () => {
               <div className="space-y-2">
                 <label className="text-sm font-medium">Path</label>
                 <Input
-                  value={editingPage?.path || ''}
-                  onChange={(e) => setEditingPage(editingPage ? { 
-                    ...editingPage, 
-                    path: e.target.value 
-                  } : null)}
+                  value={editingPage?.path || ""}
+                  onChange={(e) =>
+                    setEditingPage(
+                      editingPage
+                        ? {
+                            ...editingPage,
+                            path: e.target.value,
+                          }
+                        : null
+                    )
+                  }
                   placeholder="/dashboard/custom-page"
                   required
                 />
@@ -243,12 +307,16 @@ const LayoutCreation = () => {
               <div className="space-y-2">
                 <label className="text-sm font-medium">Layout</label>
                 <Select
-                  value={editingPage?.content.layout || 'default'}
+                  value={editingPage?.content.layout || "default"}
                   onValueChange={(value) =>
-                    setEditingPage(editingPage ? {
-                      ...editingPage,
-                      content: { ...editingPage.content, layout: value },
-                    } : null)
+                    setEditingPage(
+                      editingPage
+                        ? {
+                            ...editingPage,
+                            content: { ...editingPage.content, layout: value },
+                          }
+                        : null
+                    )
                   }
                 >
                   <SelectTrigger>
@@ -298,17 +366,17 @@ const LayoutCreation = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => handleEdit(page)}
                       >
                         Edit
                       </Button>
-                      <Button 
-                        variant="destructive" 
+                      <Button
+                        variant="destructive"
                         size="sm"
-                        onClick={() => handleDelete(page.id)}
+                        onClick={() => handleDeleteRequest(page)}
                       >
                         Delete
                       </Button>
@@ -320,6 +388,30 @@ const LayoutCreation = () => {
           </TableBody>
         </Table>
       </div>
+
+      <AlertDialog
+        open={deleteConfirm.isOpen}
+        onOpenChange={(isOpen) =>
+          setDeleteConfirm((prev) => ({ ...prev, isOpen }))
+        }
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Page</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete{" "}
+              <span className="text-black">{deleteConfirm.pageTitle} </span>?
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

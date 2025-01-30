@@ -38,6 +38,18 @@ const TodoDashboard = () => {
     content: string;
   } | null>(null);
 
+  const validateFields = (title: string, content: string): boolean => {
+    if (!title.trim() || !content.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Title and content cannot be empty",
+        variant: "destructive",
+      });
+      return false;
+    }
+    return true;
+  };
+
   // Infinite Query for todos with filter
   const {
     data,
@@ -48,6 +60,7 @@ const TodoDashboard = () => {
     status,
   } = useInfiniteQuery({
     queryKey: ["todos", filterStatus],
+    enabled: !!accessToken,
     queryFn: async ({ pageParam = 1 }) => {
       const response = await getTodosByUserId(accessToken, {
         page: pageParam,
@@ -76,6 +89,7 @@ const TodoDashboard = () => {
       toast({
         title: "Error",
         description: "Failed to create todo",
+        variant: "destructive",
         duration: 2000,
       });
     },
@@ -97,6 +111,7 @@ const TodoDashboard = () => {
       toast({
         title: "Error",
         description: "Failed to update todo",
+        variant: "destructive",
         duration: 2000,
       });
     },
@@ -116,6 +131,7 @@ const TodoDashboard = () => {
       toast({
         title: "Error",
         description: "Failed to delete todo",
+        variant: "destructive",
         duration: 2000,
       });
     },
@@ -161,6 +177,9 @@ const TodoDashboard = () => {
 
   const handleCreateTodo = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateFields(inputTodos.title, inputTodos.content)) {
+      return;
+    }
     createMutation.mutate(inputTodos);
   };
 

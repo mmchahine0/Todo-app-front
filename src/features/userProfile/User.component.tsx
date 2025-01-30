@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { queryClient } from "../../lib/queryClient";
+import { validatePassword } from "../../utils/validationConstants";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +19,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { User, Mail, Key } from "lucide-react";
+import axios from "axios";
 
 const UserProfile = () => {
   const dispatch = useDispatch();
@@ -28,6 +30,7 @@ const UserProfile = () => {
   const userData = useSelector((state: RootState) => state.userdata);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [isNameDialogOpen, setIsNameDialogOpen] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
 
   const [formData, setFormData] = useState<UserProfileUpdateInput>({
     name: userData.username || "",
@@ -64,11 +67,29 @@ const UserProfile = () => {
       setIsPasswordDialogOpen(false);
       setIsNameDialogOpen(false);
       setPasswordData({ currentPassword: "", newPassword: "" });
+      setPasswordError("");
+    },
+    onError: (error: unknown) => {
+      if (axios.isAxiosError(error)) {
+        toast({
+          title: "Error",
+          description:
+            error.response?.data?.message || "Profile failed to update",
+          variant: "destructive",
+        });
+      }
     },
   });
 
   const handlePasswordUpdate = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const passwordValidationError = validatePassword(passwordData.newPassword);
+    if (passwordValidationError) {
+      setPasswordError(passwordValidationError);
+      return;
+    }
+    setPasswordError("");
     updateProfileMutation.mutate({
       currentPassword: passwordData.currentPassword,
       newPassword: passwordData.newPassword,
@@ -194,14 +215,23 @@ const UserProfile = () => {
                     <Input
                       type="password"
                       value={passwordData.newPassword}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         setPasswordData((prev) => ({
                           ...prev,
                           newPassword: e.target.value,
-                        }))
-                      }
-                      className="mt-1"
+                        }));
+                        // Clear error when user starts typing
+                        setPasswordError("");
+                      }}
+                      className={`mt-1 ${
+                        passwordError ? "border-red-500" : ""
+                      }`}
                     />
+                    {passwordError && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {passwordError}
+                      </p>
+                    )}
                   </div>
                   <Button
                     type="submit"

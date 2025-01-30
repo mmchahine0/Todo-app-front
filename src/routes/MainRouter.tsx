@@ -7,16 +7,16 @@ import {
   publicRoutes,
   protectedRoutes,
   adminRoutes,
-  RouteConfig
+  RouteConfig,
 } from "./RoutesConfig";
-import useDynamicRoutes from "./dynamicPages/DynamicPagesRoutes"
+import useDynamicRoutes from "../hooks/use-dynamic-pages-routes";
 
 const MainRouter: React.FC = () => {
   const { dynamicRoutes, isLoading } = useDynamicRoutes();
-
   if (isLoading) {
-    return  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-
+    return (
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+    );
   }
 
   const renderRoute = (route: RouteConfig) => {

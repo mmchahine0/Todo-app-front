@@ -27,11 +27,34 @@ import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+interface ConfirmDialogState {
+  isOpen: boolean;
+  userId: string;
+  userName: string;
+  action: "suspend" | "unsuspend" | null;
+}
 
 const AdminDashboard = () => {
   const { toast } = useToast();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState>({
+    isOpen: false,
+    userId: "",
+    userName: "",
+    action: null,
+  });
 
   const accessToken = useSelector(
     (state: RootState) => state.auth?.accessToken
@@ -42,6 +65,7 @@ const AdminDashboard = () => {
   const { data, isLoading } = useQuery({
     queryKey: ["users", page, pageSize],
     queryFn: () => getAllUsers(accessToken, { page, limit: pageSize }),
+    enabled: !!accessToken,
   });
 
   const roleMutation = useMutation({
@@ -59,6 +83,13 @@ const AdminDashboard = () => {
         description: "User role updated successfully",
       });
     },
+    onError: () => {
+      toast({
+        title: "Failed",
+        description: "Profile failed to update",
+        variant: "destructive",
+      });
+    },
   });
 
   const statusMutation = useMutation({
@@ -71,7 +102,33 @@ const AdminDashboard = () => {
         description: "User status updated successfully",
       });
     },
+    onError: () => {
+      toast({
+        title: "Failed",
+        description: "User status failed to update",
+        variant: "destructive",
+      });
+    },
   });
+
+  const handleStatusUpdate = (user: User) => {
+    setConfirmDialog({
+      isOpen: true,
+      userId: user.id,
+      userName: user.name,
+      action: user.suspended ? "unsuspend" : "suspend",
+    });
+  };
+
+  const handleConfirmStatusUpdate = () => {
+    if (confirmDialog.userId && confirmDialog.action) {
+      statusMutation.mutate({
+        userId: confirmDialog.userId,
+        suspend: confirmDialog.action === "suspend",
+      });
+    }
+    setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
+  };
 
   const totalPages = Math.ceil((data?.pagination.totalItems || 0) / pageSize);
 
@@ -144,12 +201,7 @@ const AdminDashboard = () => {
                         />
                         <Button
                           variant={user.suspended ? "default" : "destructive"}
-                          onClick={() =>
-                            statusMutation.mutate({
-                              userId: user.id,
-                              suspend: !user.suspended,
-                            })
-                          }
+                          onClick={() => handleStatusUpdate(user)}
                         >
                           {user.suspended ? "Unsuspend" : "Suspend"}
                         </Button>
@@ -189,6 +241,36 @@ const AdminDashboard = () => {
           Total users: {data?.pagination.totalItems || 0}
         </div>
       </div>
+
+      <AlertDialog
+        open={confirmDialog.isOpen}
+        onOpenChange={(isOpen) =>
+          setConfirmDialog((prev) => ({ ...prev, isOpen }))
+        }
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmDialog.action === "suspend"
+                ? "Suspend User"
+                : "Unsuspend User"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to{" "}
+              <span className="text-black">
+                {confirmDialog.action} {confirmDialog.userName}{" "}
+              </span>
+              ? This action can be reversed later.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmStatusUpdate}>
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

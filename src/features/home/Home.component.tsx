@@ -1,141 +1,141 @@
-import { RootState } from "@/redux/persist/persist";
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useDispatch, useSelector } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
-import { clearCredentials } from "../../redux/slices/authSlices";
-import { clearUserData } from "../../redux/slices/userSlice";
+import { Link } from "react-router-dom";
 import { getContent } from "../admin/adminHomeEditLayout/AdminLayout.services";
+import { ArrowRight, AlertTriangle, CheckCircle, Clock } from "lucide-react";
+import home from "../../assets/home.png";
 
 const Home: React.FC = () => {
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["content"],
     queryFn: () => getContent(""),
   });
-  console.log(data)
-  return (
-    <div>
-      <Navbar customLinks={data?.data?.navbar || []} />
-      <HeroSection content={data?.data?.hero} />
-      <Footer content={data?.data?.footer || { links: [] }} />
-    </div>
-  );
-};
 
-const Navbar: React.FC<{ customLinks: { label: string; path: string;visibility: 'logged-in' | 'logged-out' | 'all' }[] }> = ({
-  customLinks = [],
-}) => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const { accessToken } = useSelector((state: RootState) => state.auth);
-
-  const handleSignOut = () => {
-    dispatch(clearCredentials());
-    dispatch(clearUserData());
-    navigate("/login");
-  };
-
-  const loggedInLinks = customLinks.filter((link) => link.visibility === 'all' || link.visibility === 'logged-in');
-  const loggedOutLinks = customLinks.filter((link) => link.visibility === 'all' || link.visibility === 'logged-out');
+  const features = [
+    {
+      title: "Easy Task Management",
+      description: "Experience seamless integration with our powerful tools.",
+      icon: CheckCircle,
+    },
+    {
+      title: "Real-time Updates",
+      description: "Stay organized with our intuitive task management system.",
+      icon: Clock,
+    },
+    {
+      title: "Priority Alerts",
+      description: "Never miss important deadlines with smart notifications.",
+      icon: AlertTriangle,
+    },
+  ];
 
   return (
-    <nav className="bg-gray-800 p-4">
-      <div className="container mx-auto flex justify-between items-center">
-        <div className="text-white text-lg font-bold">MyApp</div>
-        <div className="space-x-4">
-          {accessToken ? (
-            <>
-              {loggedInLinks.map((link, index) => (
-                <Link
-                  key={index}
-                  to={link.path}
-                  className="text-gray-300 hover:text-white"
-                >
-                  {link.label}
-                </Link>
-              ))}
-              <button
-                onClick={handleSignOut}
-                className="text-gray-300 hover:text-white"
+    <div className="flex flex-col min-h-screen bg-[#FAFAFA]">
+      {/* Hero Section */}
+      <section className="relative flex items-center min-h-[600px]">
+        {/* Background Image & Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#16C47F]/40 via-[#FFD65A]/40 to-[#FF9D23]/40" />
+        <img
+          src={home}
+          alt="Background"
+          className="absolute inset-0 w-full h-full object-cover mix-blend-overlay"
+        />
+
+        {/* Content */}
+        <div className="relative container mx-auto px-4 py-20 text-center">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 animate-fade-in text-black">
+            {data?.data.hero.title ?? "Welcome to Our Platform"}
+          </h1>
+          <p className="text-xl md:text-2xl text-black/90 mb-8 max-w-2xl mx-auto">
+            {data?.data.hero.subtitle ??
+              "Discover the power of seamless collaboration"}
+          </p>
+          <Link
+            to={data?.data.hero.buttonLink ?? "#"}
+            className="inline-flex items-center gap-2 bg-[#FFD65A] text-gray-800 px-8 py-4 rounded-lg text-lg font-medium 
+                     hover:bg-[#FFD65A]/90 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+          >
+            {data?.data.hero.buttonText ?? "Get Started"}
+            <ArrowRight className="w-5 h-5" />
+          </Link>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-gray-800">
+            Why Choose Us?
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {features.map((feature, index) => (
+              <div
+                key={index}
+                className="p-8 rounded-xl transition-all duration-200 hover:scale-105"
+                style={{
+                  borderLeft: `4px solid`,
+                }}
               >
-                Sign Out
-              </button>
-            </>
-          ) : (
-            <>
-              {loggedOutLinks.map((link, index) => (
-                <Link
-                  key={index}
-                  to={link.path}
-                  className="text-gray-300 hover:text-white"
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </>
-          )}
+                <feature.icon className="w-10 h-10 mb-4" />
+                <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
+                <p className="text-gray-600">{feature.description}</p>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
-    </nav>
-  );
-};
+      </section>
 
-const HeroSection: React.FC<{
-  content?: {
-    title: string;
-    subtitle: string;
-    buttonText: string;
-    buttonLink: string;
-  };
-}> = ({ content }) => {
-  return (
-    <section className="bg-gray-100 py-20 min-h-screen flex items-center">
-      <div className="container mx-auto text-center">
-        <h1 className="text-4xl font-bold mb-4">
-          {content?.title ?? " "}
-        </h1>
-        <p className="text-lg text-gray-700 mb-8">
-          {content?.subtitle ?? " "}
-        </p>
-        <Link
-          to={content?.buttonLink ?? " "}
-          className="bg-blue-500 text-white px-6 py-3 rounded-full hover:bg-blue-600"
-        >
-          {content?.buttonText ?? " "}
-        </Link>
-      </div>
-    </section>
-  );
-};
-
-const Footer: React.FC<{
-  content: {
-    companyName?: string;
-    description?: string;
-    links: { label: string; path: string }[];
-  };
-}> = ({ content }) => {
-  return (
-    <footer className="bg-gray-800 text-white py-8">
-      <div className="container mx-auto text-center">
-        <h3 className="text-xl font-bold mb-2">
-          {content?.companyName ?? " "}
-        </h3>
-        <p className="mb-4">
-          {content?.description ?? " "}
-        </p>
-        <div className="space-x-4">
-          {content?.links?.map((link, index) => (
-            <Link
-              key={index}
-              to={link.path}
-              className="text-gray-300 hover:text-white"
-            >
-              {link.label}
-            </Link>
-          ))}
+      {/* Statistics Section - New! */}
+      <section className="py-16 bg-[#FFD65A]/10">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div className="text-center">
+              <h3 className="text-[#16C47F] text-4xl font-bold mb-2">1000+</h3>
+              <p className="text-gray-600">Tasks Completed</p>
+            </div>
+            <div className="text-center">
+              <h3 className="text-[#FFD65A] text-4xl font-bold mb-2">24/7</h3>
+              <p className="text-gray-600">Support Available</p>
+            </div>
+            <div className="text-center">
+              <h3 className="text-[#FF9D23] text-4xl font-bold mb-2">99%</h3>
+              <p className="text-gray-600">Customer Satisfaction</p>
+            </div>
+            <div className="text-center">
+              <h3 className="text-[#F93827] text-4xl font-bold mb-2">50+</h3>
+              <p className="text-gray-600">Active Teams</p>
+            </div>
+          </div>
         </div>
-      </div>
-    </footer>
+      </section>
+
+      {/* Call to Action Section */}
+      <section className="py-16 bg-gradient-to-r from-[#FF9D23] to-[#F93827]">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold text-white mb-6">
+            Ready to Get Started?
+          </h2>
+          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
+            Join thousands of users who are already enjoying our platform
+          </p>
+          <Link
+            to={data?.data.hero.buttonLink ?? "#"}
+            className="inline-flex items-center gap-2 bg-[#FFD65A] text-gray-800 px-8 py-4 rounded-lg text-lg font-medium 
+                     hover:bg-[#FFD65A]/90 transition-all duration-200 shadow-lg hover:shadow-xl"
+          >
+            {data?.data.hero.buttonText ?? "Join Now"}
+            <ArrowRight className="w-5 h-5" />
+          </Link>
+        </div>
+      </section>
+
+      {/* Loading State */}
+      {isLoading && (
+        <div className="fixed inset-0 bg-white/90 flex items-center justify-center backdrop-blur-sm">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#FFD65A] border-t-[#16C47F]"></div>
+        </div>
+      )}
+    </div>
   );
 };
 
