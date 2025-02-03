@@ -99,8 +99,7 @@ const LayoutCreation = () => {
         admin: false
       });
     },
-    onError: (errr) => {
-      console.log(errr)
+    onError: () => {
       toast({
         title: "Error",
         description: "Failed to create page",
@@ -165,7 +164,6 @@ const LayoutCreation = () => {
       admin: newPage.admin
     };
     
-    console.log('Creating page with data:', pageData);
     createMutation.mutate(pageData);
   };
   const getLayoutAndProtection = (path: string): { layout: string; isProtected: boolean; admin: boolean } => {
@@ -182,7 +180,6 @@ const LayoutCreation = () => {
    const handlePathChange = (path: string, isNewPage: boolean = true) => {
     const { layout, isProtected, admin } = getLayoutAndProtection(path);
     if (isNewPage) {
-      console.log("path: ",path)
       setNewPage(prev => ({
         ...prev,
         path,

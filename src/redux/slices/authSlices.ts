@@ -1,13 +1,12 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface AuthState {
-  id: string;
+  id?: string;  // Make id optional
   accessToken: string;
   _initialized: boolean;
 }
 
 const initialState: AuthState = {
-  id: "",
   accessToken: "",
   _initialized: false,
 };
@@ -17,7 +16,7 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     setCredentials: (state, action: PayloadAction<AuthState>) => {
-      state.id = action.payload.id;
+      if (action.payload.id) state.id = action.payload.id;
       state.accessToken = action.payload.accessToken;
     },
     clearCredentials: (state) => {

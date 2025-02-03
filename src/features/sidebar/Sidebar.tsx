@@ -45,7 +45,7 @@ export function AppSidebar({ username, role }: AppSidebarProps) {
     queryClient.clear();
     dispatch(clearCredentials());
     dispatch(clearUserData());
-    navigate("/signin");
+    navigate("/auth/login");
   };
 
   const sidebarItems = role === "ADMIN" ? adminItems : userItems;

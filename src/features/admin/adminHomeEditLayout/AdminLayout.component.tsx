@@ -588,7 +588,7 @@ const ContentManagement = () => {
                   >
                     Add Feature
                   </Button>
-                  <Button onClick={handleFeaturesSubmit} className="mt-4">
+                  <Button onClick={handleFeaturesSubmit} className="m-2">
                     Save Features
                   </Button>
                 </div>
@@ -683,7 +683,7 @@ const ContentManagement = () => {
                 >
                   Add Statistic
                 </Button>
-                <Button onClick={handleStatisticsSubmit} className="mt-4">
+                <Button onClick={handleStatisticsSubmit} className="m-2">
                   Save Statistics
                 </Button>
               </div>
@@ -840,6 +840,7 @@ const ContentManagement = () => {
                     </div>
                   ))}
                   <Button
+                    className="mt-6"
                     onClick={() => {
                       setLocalContent((prev) => ({
                         ...prev,

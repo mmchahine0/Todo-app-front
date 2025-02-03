@@ -25,18 +25,14 @@ const Home: React.FC = () => {
     } as Partial<SiteContent>)
   });
 
-  if (isLoading) {
+  if (isLoading || !contentResponse) {
     return (
       <div className="fixed inset-0 bg-white/90 flex items-center justify-center backdrop-blur-sm">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#FFD65A] border-t-[#16C47F]"></div>
       </div>
     );
   }
-
-  if (!contentResponse) {
-    return <div>Error loading content</div>;
-  }
-
+ 
   const { hero, features, statistics, cta } = contentResponse;
 
   return (

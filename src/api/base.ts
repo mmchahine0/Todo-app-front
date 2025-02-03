@@ -54,35 +54,26 @@ export const apiClient = async ({
       )
     ) {
       try {
-        // Attempt to refresh using httpOnly cookie
+        const { id: userId } = store.getState().auth;
+        
         const response = await axios.post(
           `${BASE_URL}${ENDPOINTS.Auth.RefreshToken}`,
           {},
           { withCredentials: true }
         );
+      
+        const { accessToken: newAccessToken } = response.data.data;
 
-        const { accessToken: newAccessToken, user } = response.data.data;
-
-        // Update store with new token
         store.dispatch(
           setCredentials({
             accessToken: newAccessToken,
-            id: user.id,
+            id: userId,
             _initialized: true,
           })
         );
-
-        // Retry original request
-        const retryResponse = await axios({
-          ...options,
-          headers: {
-            ...headers,
-            Authorization: `Bearer ${newAccessToken}`,
-          },
-        });
-        return retryResponse.data;
+        return response.data;
       } catch (refreshError) {
-        // Clear auth state on refresh failure
+        console.error('Refresh token error:', refreshError);
         store.dispatch(clearCredentials());
         store.dispatch(clearUserData());
         throw refreshError;
