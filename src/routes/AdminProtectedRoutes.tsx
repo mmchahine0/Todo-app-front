@@ -16,7 +16,7 @@ export const AdminRoute = ({ children }: AdminRouteProps) => {
   );
 
   if (!accessToken || accessToken === "") {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/auth/login" replace />;
   }
 
   if (!isInitialized) {
@@ -24,7 +24,7 @@ export const AdminRoute = ({ children }: AdminRouteProps) => {
   }
 
   if (role !== "ADMIN") {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/auth/login" replace />;
   }
 
   return <>{children}</>;

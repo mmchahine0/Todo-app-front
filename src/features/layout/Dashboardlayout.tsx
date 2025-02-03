@@ -39,7 +39,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
 
             {/* Main content area */}
-            <div className="flex-1 flex flex-col">
+            <div className="flex-1 flex flex-col sticky top-0 z-50 backdrop-blur-sm">
               {/* Navbar */}
 
               <Navbar customLinks={data?.data?.navbar || []} />

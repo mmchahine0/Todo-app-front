@@ -6,34 +6,31 @@ import UserProfile from "../features/userProfile/User.component";
 import AdminDashboard from "@/features/admin/adminDashboard/AdminDashboard.component";
 import AdminLayout from "@/features/admin/adminHomeEditLayout/AdminLayout.component";
 import LayoutCreation from "../features/admin/adminLayoutCreation/LayoutCreation.component";
-import { BaseLayout } from "../features/layout/Baselayout";
-import { DashboardLayout } from "../features/layout/Dashboardlayout";
-import { Authlayout } from "../features/layout/Authlayout";
 
 export interface RouteConfig {
   path: string;
   component: React.ComponentType<object>;
-  layout?: React.ComponentType<object>;
-  protected?: boolean;
+  layout?: 'base' | 'dashboard' | 'auth';
+  isProtected?: boolean;
   admin?: boolean;
 }
 
 // Routes that don't require authentication
 export const publicRoutes: RouteConfig[] = [
   {
-    path: "/login",
+    path: "/auth/login",
     component: SigninComponent,
-    layout: Authlayout,
+    layout: "auth",
   },
   {
-    path: "/signup",
+    path: "/auth/signup",
     component: SignupComponent,
-    layout: Authlayout,
+    layout: "auth",
   },
   {
     path: "/home",
     component: Home,
-    layout: BaseLayout,
+    layout: "base",
   },
 ];
 
@@ -42,14 +39,14 @@ export const protectedRoutes: RouteConfig[] = [
   {
     path: "/dashboard/todo",
     component: TodoDashboard,
-    layout: DashboardLayout,
-    protected: true,
+    layout: 'dashboard',
+    isProtected: true,
   },
   {
     path: "/dashboard/profile",
     component: UserProfile,
-    layout: DashboardLayout,
-    protected: true,
+    layout: 'dashboard',
+    isProtected: true,
   },
 ];
 
@@ -58,19 +55,19 @@ export const adminRoutes: RouteConfig[] = [
   {
     path: "/dashboard/admin/layout",
     component: LayoutCreation,
-    layout: DashboardLayout,
+    layout: 'dashboard',
     admin: true,
   },
   {
     path: "/dashboard/admin/users",
     component: AdminDashboard,
-    layout: DashboardLayout,
+    layout: 'dashboard',
     admin: true,
   },
   {
     path: "/dashboard/admin/layout/home",
     component: AdminLayout,
-    layout: DashboardLayout,
+    layout: 'dashboard',
     admin: true,
   },
 ];

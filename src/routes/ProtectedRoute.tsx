@@ -18,7 +18,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   );
 
   if (!accessToken || accessToken == "") {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/auth/login" replace />;
   }
   // Show nothing while checking authentication
   if (!isInitialized) {

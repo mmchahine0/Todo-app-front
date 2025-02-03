@@ -29,13 +29,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import {
   getAllPages,
@@ -45,7 +38,7 @@ import {
 } from "./LayoutCreation.services";
 import {
   DynamicPage,
-  CreatePageInput,
+  CreatePageInput
 } from "../../dynamicPages/DynamicPages.types";
 import { queryClient } from "@/lib/queryClient";
 
@@ -69,9 +62,11 @@ const LayoutCreation = () => {
     title: "",
     path: "",
     content: {
-      layout: "default",
+      layout: "base", 
       components: [],
     },
+    isProtected: false,
+    admin: false
   });
 
   const accessToken = useSelector(
@@ -80,7 +75,7 @@ const LayoutCreation = () => {
 
   const { data: pages, isLoading: pagesLoading } = useQuery({
     queryKey: ["pages"],
-    queryFn: () => getAllPages(accessToken),
+    queryFn: () => getAllPages(),
     enabled: !!accessToken,
   });
 
@@ -97,12 +92,15 @@ const LayoutCreation = () => {
         title: "",
         path: "",
         content: {
-          layout: "default",
+          layout: "base",
           components: [],
         },
+        isProtected: false,
+        admin: false
       });
     },
-    onError: () => {
+    onError: (errr) => {
+      console.log(errr)
       toast({
         title: "Error",
         description: "Failed to create page",
@@ -158,13 +156,59 @@ const LayoutCreation = () => {
     const formattedPath = newPage.path.startsWith("/")
       ? newPage.path
       : `/${newPage.path}`;
-    createMutation.mutate({
+      
+    const pageData = {
       ...newPage,
       path: formattedPath,
-    });
+      layout: newPage.content.layout,
+      isProtected: newPage.isProtected,
+      admin: newPage.admin
+    };
+    
+    console.log('Creating page with data:', pageData);
+    createMutation.mutate(pageData);
   };
+  const getLayoutAndProtection = (path: string): { layout: string; isProtected: boolean; admin: boolean } => {
+    const formattedPath = path.startsWith("/") ? path : `/${path}`;
+    if (formattedPath.startsWith("/dashboard/admin")) {
+      return { layout: "dashboard", isProtected: true, admin: true };
+    }
+    if (formattedPath.startsWith("/dashboard")) {
+      return { layout: "dashboard", isProtected: true, admin: false }; 
+    }
+    return { layout: "base", isProtected: false, admin: false };
+   };
 
-  const handleEditSubmit = (e: React.FormEvent) => {
+   const handlePathChange = (path: string, isNewPage: boolean = true) => {
+    const { layout, isProtected, admin } = getLayoutAndProtection(path);
+    if (isNewPage) {
+      console.log("path: ",path)
+      setNewPage(prev => ({
+        ...prev,
+        path,
+        layout,
+        isProtected,
+        admin,
+        content: {
+          ...prev.content,
+          layout
+        }
+      }));
+    } else if (editingPage) {
+      setEditingPage({
+        ...editingPage,
+        path,
+        layout,
+        isProtected,
+        admin,
+        content: {
+          ...editingPage.content,
+          layout
+        }
+      });
+    }
+   }
+    const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingPage) return;
 
@@ -226,33 +270,13 @@ const LayoutCreation = () => {
                 <label className="text-sm font-medium">Path</label>
                 <Input
                   value={newPage.path}
-                  onChange={(e) =>
-                    setNewPage({ ...newPage, path: e.target.value })
-                  }
-                  placeholder="/dashboard/custom-page"
+                  onChange={(e) => handlePathChange(e.target.value)}
+                  placeholder="/dashboard/custom-page or /custom-page"
                   required
                 />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Layout</label>
-                <Select
-                  value={newPage.content.layout}
-                  onValueChange={(value) =>
-                    setNewPage({
-                      ...newPage,
-                      content: { ...newPage.content, layout: value },
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a layout" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="default">Default Layout</SelectItem>
-                    <SelectItem value="full-width">Full Width</SelectItem>
-                    <SelectItem value="sidebar">With Sidebar</SelectItem>
-                  </SelectContent>
-                </Select>
+                <p className="text-sm text-gray-500">
+                  Layout will be automatically set based on the path
+                </p>
               </div>
               <Button type="submit" className="w-full">
                 Create Page
@@ -275,10 +299,7 @@ const LayoutCreation = () => {
                   onChange={(e) =>
                     setEditingPage(
                       editingPage
-                        ? {
-                            ...editingPage,
-                            title: e.target.value,
-                          }
+                        ? { ...editingPage, title: e.target.value }
                         : null
                     )
                   }
@@ -290,45 +311,15 @@ const LayoutCreation = () => {
                 <label className="text-sm font-medium">Path</label>
                 <Input
                   value={editingPage?.path || ""}
-                  onChange={(e) =>
-                    setEditingPage(
-                      editingPage
-                        ? {
-                            ...editingPage,
-                            path: e.target.value,
-                          }
-                        : null
-                    )
-                  }
-                  placeholder="/dashboard/custom-page"
+                  onChange={(e) => handlePathChange(e.target.value, false)}
+                  placeholder="/dashboard/custom-page or /custom-page"
                   required
                 />
+                <p className="text-sm text-gray-500">
+                  Layout will be automatically set based on the path
+                </p>
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Layout</label>
-                <Select
-                  value={editingPage?.content.layout || "default"}
-                  onValueChange={(value) =>
-                    setEditingPage(
-                      editingPage
-                        ? {
-                            ...editingPage,
-                            content: { ...editingPage.content, layout: value },
-                          }
-                        : null
-                    )
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a layout" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="default">Default Layout</SelectItem>
-                    <SelectItem value="full-width">Full Width</SelectItem>
-                    <SelectItem value="sidebar">With Sidebar</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              
               <Button type="submit" className="w-full">
                 Update Page
               </Button>
@@ -344,6 +335,7 @@ const LayoutCreation = () => {
               <TableHead>Title</TableHead>
               <TableHead>Path</TableHead>
               <TableHead>Layout</TableHead>
+              <TableHead>Protected</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
@@ -360,7 +352,16 @@ const LayoutCreation = () => {
                 <TableRow key={page.id}>
                   <TableCell>{page.title}</TableCell>
                   <TableCell>{page.path}</TableCell>
-                  <TableCell>{page.content.layout}</TableCell>
+                  <TableCell>{page.layout}</TableCell>
+<TableCell>
+  <span className={`px-2 py-1 rounded-full text-xs ${
+    page.isProtected 
+      ? "bg-yellow-100 text-yellow-800" 
+      : "bg-green-100 text-green-800"
+  }`}>
+    {page.isProtected ? "Protected" : "Public"}
+  </span>
+</TableCell>
                   <TableCell>
                     {page.isPublished ? "Published" : "Draft"}
                   </TableCell>
@@ -399,8 +400,9 @@ const LayoutCreation = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Page</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete{" "}
-              <span className="text-black">{deleteConfirm.pageTitle} </span>?
+              Are you sure you want to delete
+              <span className="text-black">{deleteConfirm.pageTitle}</span>?
+              Thise will also delete all items attached to this page {"(e.g. Navitems, Footer Links)"}
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

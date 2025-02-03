@@ -108,7 +108,7 @@ const Signup: React.FC = () => {
       await signup(credentials);
 
       signupLimiter.reset();
-      navigate("/login");
+      navigate("/auth/login");
     } catch (err) {
       const axioserr = err as AxiosError<ServerError>;
       setErrors((prev) => ({
@@ -206,7 +206,7 @@ const Signup: React.FC = () => {
               Already have an account?
             </p>
             <Link
-              to="/login"
+              to="/auth/login"
               className="font-medium text-primary hover:text-primary/90 text-gray-500"
             >
               Sign in

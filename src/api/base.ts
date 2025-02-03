@@ -50,7 +50,7 @@ export const apiClient = async ({
       axios.isAxiosError(error) &&
       error.response?.status === 401 &&
       (error.response.data as { message: string }).message.includes(
-        "Token has expired"
+        "Unauthorized: Token has expired"
       )
     ) {
       try {

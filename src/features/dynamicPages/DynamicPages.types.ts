@@ -14,6 +14,7 @@ interface ComponentConfig {
 interface PageContent {
   layout: string;
   components: ComponentConfig[];
+  isProtected?: boolean
 }
 
 // Route interface
@@ -30,6 +31,9 @@ interface DynamicPage {
   content: PageContent;
   isPublished: boolean;
   userId: string;
+  layout: string;
+  isProtected: boolean;
+  admin: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -51,6 +55,8 @@ interface CreatePageInput {
   title: string;
   path: string;
   content: PageContent;
+  isProtected: boolean
+  admin: boolean
 }
 
 export type {

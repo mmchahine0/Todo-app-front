@@ -15,13 +15,10 @@ export const getAllRoutes = async (accessToken: string): Promise<Route[]> => {
   return response as Route[];
 };
 
-export const getAllPages = async (
-  accessToken: string
-): Promise<DynamicPagesResponse> => {
+export const getAllPages = async (): Promise<DynamicPagesResponse> => {
   const response = await apiClient({
     method: "GET",
     endpoint: ENDPOINTS.Admin.Pages.List,
-    accessToken,
   });
   return response as DynamicPagesResponse;
 };
