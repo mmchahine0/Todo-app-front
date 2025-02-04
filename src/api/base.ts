@@ -15,7 +15,7 @@ interface ApiOptions {
   params?: unknown;
 }
 
-const BASE_URL = "http://localhost:3500/api/v1";
+const BASE_URL = "https://todo-app-back-gp4v.onrender.com/api/v1";
 
 axios.defaults.withCredentials = true;
 
@@ -55,13 +55,13 @@ export const apiClient = async ({
     ) {
       try {
         const { id: userId } = store.getState().auth;
-        
+
         const response = await axios.post(
           `${BASE_URL}${ENDPOINTS.Auth.RefreshToken}`,
           {},
           { withCredentials: true }
         );
-      
+
         const { accessToken: newAccessToken } = response.data.data;
 
         store.dispatch(
@@ -73,7 +73,7 @@ export const apiClient = async ({
         );
         return response.data;
       } catch (refreshError) {
-        console.error('Refresh token error:', refreshError);
+        console.error("Refresh token error:", refreshError);
         store.dispatch(clearCredentials());
         store.dispatch(clearUserData());
         throw refreshError;
