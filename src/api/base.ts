@@ -1,8 +1,7 @@
 import axios from "axios";
 import { store } from "../redux/persist/persist";
-import { clearCredentials } from "../redux/slices/authSlices";
+import { clearCredentials, setCredentials } from "../redux/slices/authSlices";
 import { clearUserData } from "../redux/slices/userSlice";
-import { setCredentials } from "../redux/slices/authSlices";
 import { ENDPOINTS } from "../api/endpoints";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";

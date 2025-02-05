@@ -1,8 +1,8 @@
 import { Outlet } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { getContent } from "../admin/adminHomeEditLayout/AdminLayout.services";
-import Navbar from "../navbar/Navbar.component";
-import Footer from "../footer/Footer.component";
+import { getContent } from "../../features/admin/adminHomeEditLayout/AdminLayout.services";
+import Navbar from "../common/navbar/Navbar.component";
+import Footer from "../common/footer/Footer.component";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/persist/persist";
 

@@ -2,9 +2,9 @@ import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import { persistReducer, persistStore } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import { encryptTransform } from "redux-persist-transform-encrypt";
-import { authReducer,setInitialized} from "../slices/authSlices";
+import { authReducer, setInitialized } from "../slices/authSlices";
 import { userReducer } from "../slices/userSlice";
-import {rateLimitReducer} from "../slices/ratelimiterSlice"
+import { rateLimitReducer } from "../slices/ratelimiterSlice";
 
 const encryptor = encryptTransform({
   secretKey: import.meta.env.VITE_REDUX_ENCRYPTION_KEY!,
@@ -16,7 +16,7 @@ const encryptor = encryptTransform({
 const rootReducer = combineReducers({
   auth: authReducer,
   userdata: userReducer,
-  rateLimit: rateLimitReducer
+  rateLimit: rateLimitReducer,
 });
 
 const persistConfig = {

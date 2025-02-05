@@ -1,4 +1,4 @@
-import { TodoInput } from "./Todo.types";
+import type { TodoInput } from "./Todo.types";
 import {
   getTodosByUserId,
   createTodo,
@@ -7,10 +7,14 @@ import {
 } from "./Todo.service";
 import { useRef, useCallback, useState } from "react";
 import { useSelector } from "react-redux";
-import { RootState } from "@/redux/persist/persist";
+import type { RootState } from "@/redux/persist/persist";
 import { useToast } from "@/hooks/use-toast";
 import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "../../lib/queryClient";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { Helmet } from "react-helmet-async";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -193,6 +197,21 @@ const TodoDashboard = () => {
 
     if (!originalTodo) return;
 
+    // Check if title or content has changed
+    if (
+      editingTodo.title === originalTodo.title &&
+      editingTodo.content === originalTodo.content
+    ) {
+      toast({
+        title: "No changes",
+        description: "No modifications were made to the todo",
+        variant: "destructive",
+        duration: 2000,
+      });
+      setEditingTodo(null);
+      return;
+    }
+
     updateMutation.mutate({
       id: editingTodo.id,
       todo: {
@@ -228,171 +247,232 @@ const TodoDashboard = () => {
   const totalItems = data?.pages[0]?.pagination.totalItems ?? 0;
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Todo List</h1>
-      <div className="flex justify-between items-center mb-6">
+    <>
+      <Helmet>
+        <title>Todo Dashboard | Your App</title>
+        <meta name="description" content="Manage your todos efficiently" />
+      </Helmet>
+
+      <main className="max-w-4xl mx-auto p-4 md:p-6">
+        <h1
+          className="text-2xl md:text-3xl font-bold mb-6"
+          id="todo-dashboard-title"
+        >
+          Todo Dashboard
+        </h1>
+
         {/* Create Todo Form */}
-        <form onSubmit={handleCreateTodo} className="mb-4">
-          <input
-            type="text"
-            name="title"
-            value={inputTodos.title}
-            onChange={handleInputChange}
-            placeholder="Title"
-            className="border p-2 mr-2"
-          />
-          <input
-            type="text"
-            name="content"
-            value={inputTodos.content}
-            onChange={handleInputChange}
-            placeholder="Content"
-            className="border p-2 mr-2"
-          />
-          <button
-            type="submit"
-            disabled={createMutation.isPending}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-blue-300"
+        <Card className="mb-6 p-4 md:p-6">
+          <form
+            onSubmit={handleCreateTodo}
+            className="space-y-4 md:space-y-0 md:flex md:gap-4"
+            aria-label="Create new todo"
           >
-            {createMutation.isPending ? "Adding..." : "Add Todo"}
-          </button>
-        </form>
+            <div className="flex-1 space-y-4 md:space-y-0 md:flex md:gap-4">
+              <Input
+                type="text"
+                name="title"
+                value={inputTodos.title}
+                onChange={handleInputChange}
+                placeholder="Todo title"
+                className="w-full"
+                aria-label="Todo title"
+                required
+              />
+              <Input
+                type="text"
+                name="content"
+                value={inputTodos.content}
+                onChange={handleInputChange}
+                placeholder="Todo description"
+                className="w-full"
+                aria-label="Todo description"
+                required
+              />
+            </div>
+            <Button
+              type="submit"
+              disabled={createMutation.isPending}
+              className="w-full md:w-auto bg-green-500 hover:bg-green-600 text-white"
+              aria-busy={createMutation.isPending}
+            >
+              {createMutation.isPending ? "Adding..." : "Add Todo"}
+            </Button>
+          </form>
+        </Card>
+
         {/* Filter Controls */}
-        <div className="mb-6 flex items-center gap-4">
-          <span className="font-medium">Filter:</span>
-          <div className="flex gap-2">
+        <div className="mb-6">
+          <div
+            className="flex flex-wrap gap-2"
+            role="group"
+            aria-label="Filter todos"
+          >
             {(["all", "active", "completed"] as const).map((status) => (
-              <button
+              <Button
                 key={status}
                 onClick={() => handleFilterChange(status)}
-                className={`px-4 py-2 rounded transition-colors ${
+                className={`flex-1 md:flex-none ${
                   filterStatus === status
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-200 hover:bg-gray-300"
+                    ? "bg-green-500 text-white"
+                    : "bg-green-100 hover:bg-green-200 text-green-800"
                 }`}
+                aria-pressed={filterStatus === status}
               >
                 {status.charAt(0).toUpperCase() + status.slice(1)}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
-      </div>
-      {/* Todo List */}
-      <ul className="space-y-4">
-        {todos.map((todo, index) => (
-          <li
-            key={todo.id}
-            ref={index === todos.length - 1 ? lastTodoElementRef : null}
-            className="flex items-center justify-between p-4 border rounded"
+
+        {/* Todo List */}
+        {isLoading ? (
+          <div
+            className="flex justify-center p-8"
+            role="status"
+            aria-label="Loading todos"
           >
-            {editingTodo && editingTodo.id === todo.id ? (
-              <form onSubmit={handleUpdateTodo} className="flex-1 mr-4">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    name="title"
-                    value={editingTodo.title}
-                    onChange={handleEditInputChange}
-                    className="border p-2 flex-1"
-                  />
-                  <input
-                    type="text"
-                    name="content"
-                    value={editingTodo.content}
-                    onChange={handleEditInputChange}
-                    className="border p-2 flex-1"
-                  />
-                  <button
-                    type="submit"
-                    disabled={updateMutation.isPending}
-                    className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:bg-green-300"
-                  >
-                    {updateMutation.isPending ? "Saving..." : "Save"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditingTodo(null)}
-                    className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <>
-                <div className="flex items-center flex-1">
-                  <input
-                    type="checkbox"
-                    checked={todo.completed}
-                    onChange={() =>
-                      handleToggleComplete(todo.id, todo.completed)
-                    }
-                    className="mr-4"
-                    disabled={updateMutation.isPending}
-                  />
-                  <span
-                    className={`flex-1 ${todo.completed ? "line-through" : ""}`}
-                  >
-                    <span className="font-medium">{todo.title}</span> -{" "}
-                    {todo.content}
-                  </span>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() =>
-                      setEditingTodo({
-                        id: todo.id,
-                        title: todo.title,
-                        content: todo.content,
-                      })
-                    }
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => deleteMutation.mutate(todo.id)}
-                    disabled={deleteMutation.isPending}
-                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 disabled:bg-red-300"
-                  >
-                    {deleteMutation.isPending ? "Deleting..." : "Delete"}
-                  </button>
-                </div>
-              </>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500" />
+          </div>
+        ) : (
+          <>
+            <ul className="space-y-4" aria-label="Todo list" role="list">
+              {todos.map((todo, index) => (
+                <li
+                  key={todo.id}
+                  ref={index === todos.length - 1 ? lastTodoElementRef : null}
+                  className="group bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <Card className="p-4">
+                    {editingTodo && editingTodo.id === todo.id ? (
+                      <form
+                        onSubmit={handleUpdateTodo}
+                        className="space-y-4"
+                        aria-label={`Edit todo: ${todo.title}`}
+                      >
+                        <div className="space-y-4 md:space-y-0 md:flex md:gap-4">
+                          <Input
+                            type="text"
+                            name="title"
+                            value={editingTodo.title}
+                            onChange={handleEditInputChange}
+                            className="w-full"
+                            aria-label="Edit todo title"
+                          />
+                          <Input
+                            type="text"
+                            name="content"
+                            value={editingTodo.content}
+                            onChange={handleEditInputChange}
+                            className="w-full"
+                            aria-label="Edit todo description"
+                          />
+                        </div>
+                        <div className="flex gap-2 justify-end">
+                          <Button
+                            type="submit"
+                            disabled={updateMutation.isPending}
+                            className="bg-green-500 hover:bg-green-600 text-white"
+                          >
+                            {updateMutation.isPending ? "Saving..." : "Save"}
+                          </Button>
+                          <Button
+                            type="button"
+                            onClick={() => setEditingTodo(null)}
+                            className="bg-gray-500 hover:bg-gray-600 text-white"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </form>
+                    ) : (
+                      <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
+                        <div className="flex items-start md:items-center flex-1 gap-3">
+                          <input
+                            type="checkbox"
+                            checked={todo.completed}
+                            onChange={() =>
+                              handleToggleComplete(todo.id, todo.completed)
+                            }
+                            className="mt-1 md:mt-0 h-4 w-4 rounded border-gray-300"
+                            aria-label={`Mark "${todo.title}" as ${
+                              todo.completed ? "incomplete" : "complete"
+                            }`}
+                            disabled={updateMutation.isPending}
+                          />
+                          <div
+                            className={`flex-1 ${
+                              todo.completed ? "line-through text-gray-500" : ""
+                            }`}
+                          >
+                            <h3 className="font-medium">{todo.title}</h3>
+                            <p className="text-sm text-gray-600">
+                              {todo.content}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 ml-8">
+                          <Button
+                            onClick={() =>
+                              setEditingTodo({
+                                id: todo.id,
+                                title: todo.title,
+                                content: todo.content,
+                              })
+                            }
+                            className="bg-green-500 hover:bg-green-600 text-white"
+                            aria-label={`Edit "${todo.title}"`}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            onClick={() => deleteMutation.mutate(todo.id)}
+                            disabled={deleteMutation.isPending}
+                            className="bg-red-500 hover:bg-red-600 text-white"
+                            aria-label={`Delete "${todo.title}"`}
+                          >
+                            {deleteMutation.isPending
+                              ? "Deleting..."
+                              : "Delete"}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </Card>
+                </li>
+              ))}
+            </ul>
+
+            {status === "error" && (
+              <div
+                className="text-center py-8 text-red-500"
+                role="alert"
+                aria-live="polite"
+              >
+                Error loading todos. Please try again.
+              </div>
             )}
-          </li>
-        ))}
 
-        {(isLoading || isFetchingNextPage) && (
-          <li className="flex justify-center py-4">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-          </li>
+            {!isLoading && todos.length === 0 && (
+              <div className="text-center py-8 text-gray-500" role="status">
+                {filterStatus === "all"
+                  ? "No todos found. Create one to get started!"
+                  : `No ${filterStatus} todos found.`}
+              </div>
+            )}
+
+            {todos.length > 0 && (
+              <div
+                className="text-center mt-6 text-gray-600"
+                aria-live="polite"
+              >
+                Showing {todos.length} of {totalItems} items
+              </div>
+            )}
+          </>
         )}
-      </ul>
-
-      {/* Error State */}
-      {status === "error" && (
-        <div className="text-center py-4 text-red-500">
-          Error loading todos. Please try again.
-        </div>
-      )}
-
-      {/* Empty State */}
-      {!isLoading && todos.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
-          {filterStatus === "all"
-            ? "No todos found. Create one to get started!"
-            : `No ${filterStatus} todos found.`}
-        </div>
-      )}
-
-      {/* Items Count */}
-      {todos.length > 0 && (
-        <div className="text-center mt-4 text-gray-600">
-          Showing {todos.length} of {totalItems} items
-        </div>
-      )}
-    </div>
+      </main>
+    </>
   );
 };
 

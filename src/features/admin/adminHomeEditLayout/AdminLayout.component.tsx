@@ -7,17 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { queryClient } from "@/lib/queryClient";
-import {
-  NavItem,
-  FooterContent,
-  FeaturesContent,
-  StatisticsContent,
-  CtaContent,
-  DeleteConfirmState,
-} from "./AdminLayout.types";
-import axios from "axios";
-import _ from "lodash";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Helmet } from "react-helmet-async";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,7 +19,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  NavItem,
+  FooterContent,
+  FeaturesContent,
+  StatisticsContent,
+  CtaContent,
+  DeleteConfirmState,
+} from "./AdminLayout.types";
 import { useState, useEffect } from "react";
+import _ from "lodash";
+import { queryClient } from "@/lib/queryClient";
+import axios from "axios";
+import { Label } from "@/components/ui/label";
 
 const initialLocalContent = {
   navItems: [] as NavItem[],
@@ -150,7 +153,11 @@ const ContentManagement = () => {
     }
 
     if (!hasChanges(localContent.navItems, data?.navItems)) {
-      toast({ title: "No changes detected" });
+      toast({
+        title: "Info",
+        description: "No changes detected in navigation items.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -302,6 +309,7 @@ const ContentManagement = () => {
       toast({
         title: "Info",
         description: "No changes detected in features",
+        variant: "destructive",
       });
       return;
     }
@@ -335,6 +343,7 @@ const ContentManagement = () => {
       toast({
         title: "Info",
         description: "No changes detected in statistics",
+        variant: "destructive",
       });
       return;
     }
@@ -375,6 +384,7 @@ const ContentManagement = () => {
       toast({
         title: "Info",
         description: "No changes detected in CTA section",
+        variant: "destructive",
       });
       return;
     }
@@ -425,6 +435,7 @@ const ContentManagement = () => {
       toast({
         title: "Info",
         description: "No changes detected in footer content",
+        variant: "destructive",
       });
       return;
     }
@@ -456,517 +467,660 @@ const ContentManagement = () => {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Navigation Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Navigation Items</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {validationErrors.length > 0 && (
-              <div className="text-red-500">
-                {validationErrors.map((error, index) => (
-                  <div key={index}>{error}</div>
-                ))}
-              </div>
-            )}
-            {localContent.navItems?.map((item, index) => (
-              <div key={index} className="flex gap-4">
-                <Input
-                  placeholder="Label"
-                  value={item.label}
-                  onChange={(e) =>
-                    handleNavChange(index, "label", e.target.value)
-                  }
-                />
-                <Input
-                  placeholder="Path"
-                  value={item.path}
-                  onChange={(e) =>
-                    handleNavChange(index, "path", e.target.value)
-                  }
-                />
-                <div className="flex items-center space-x-2">
-                  <label>Visibility:</label>
-                  <select
-                    value={item.visibility}
-                    onChange={(e) =>
-                      handleNavChange(index, "visibility", e.target.value)
-                    }
-                    className="border rounded px-2 py-1"
-                  >
-                    <option value="all">All Users</option>
-                    <option value="logged-in">Logged In Only</option>
-                    <option value="logged-out">Logged Out Only</option>
-                    <option value="admin">Admin Only</option>
-                  </select>
-                </div>
-                <Button
-                  variant="destructive"
-                  onClick={() => handleDeleteRequest("nav", index, item.label)}
-                >
-                  Remove
-                </Button>
-              </div>
-            ))}
-            <Button
-              onClick={() => {
-                setLocalContent((prev) => ({
-                  ...prev,
-                  navItems: [
-                    ...(prev.navItems || []),
-                    { label: "", path: "", visibility: "all" },
-                  ],
-                }));
-              }}
-            >
-              Add Navigation Item
-            </Button>
-            <Button onClick={handleNavSubmit} className="ml-2">
-              Save Navigation
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+    <>
+      <Helmet>
+        <title>Content Management | Admin Dashboard</title>
+        <meta
+          name="description"
+          content="Manage website content including navigation, features, statistics, CTAs, and footer settings for optimal user experience."
+        />
+        <meta
+          name="keywords"
+          content="content management, website admin, SEO settings, accessibility"
+        />
+        <meta
+          property="og:title"
+          content="Content Management | Admin Dashboard"
+        />
+        <meta
+          property="og:description"
+          content="Comprehensive content management interface for website administrators"
+        />
+      </Helmet>
+      <div className="container mx-auto p-4 md:p-6 space-y-6">
+        <header className="space-y-2">
+          <h1 className="text-2xl font-bold text-gray-900">
+            Content Management
+          </h1>
+          <p className="text-gray-600 text-sm">
+            Customize your website's content and appearance across all devices
+          </p>
+        </header>
 
-      {/* Features Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Features Section</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <Input
-              placeholder="Section Title"
-              value={localContent.featuresContent?.title || ""}
-              onChange={(e) =>
-                setLocalContent((prev) => ({
-                  ...prev,
-                  featuresContent: {
-                    ...prev.featuresContent,
-                    title: e.target.value,
-                  },
-                }))
-              }
-            />
-            <div className="space-y-4">
-              {localContent.featuresContent?.items?.map((feature, index) => (
-                <div key={index} className="space-y-2 p-4 border rounded-lg">
-                  <div className="flex justify-between items-center">
-                    <h4 className="font-medium">Feature {index + 1}</h4>
+        <div className="space-y-6 pb-8">
+          <Tabs defaultValue="navigation">
+            <TabsList className="flex py-4 px-1 m-2">
+              {["navigation", "features", "statistics", "cta", "footer"].map(
+                (tab) => (
+                  <TabsTrigger
+                    key={tab}
+                    value={tab}
+                    className="px-4 py-2 text-sm capitalize"
+                  >
+                    {tab}
+                  </TabsTrigger>
+                )
+              )}
+            </TabsList>
+            {/* Navigation Tab */}
+            <TabsContent value="navigation">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Navigation Settings</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {validationErrors.length > 0 && (
+                      <div
+                        role="alert"
+                        className="text-red-600 text-sm bg-red-50 p-3 rounded-lg"
+                      >
+                        {validationErrors.map((error, index) => (
+                          <p key={index}>• {error}</p>
+                        ))}
+                      </div>
+                    )}
+                    {localContent.navItems?.map((item, index) => (
+                      <div
+                        key={index}
+                        className="flex flex-col md:flex-row gap-4 items-start md:items-center"
+                      >
+                        <div className="w-full md:flex-1 space-y-2">
+                          <Label htmlFor={`nav-label-${index}`}>Label</Label>
+                          <Input
+                            id={`nav-label-${index}`}
+                            placeholder="Menu Label"
+                            value={item.label}
+                            onChange={(e) =>
+                              handleNavChange(index, "label", e.target.value)
+                            }
+                          />
+                        </div>
+                        <div className="w-full md:flex-1 space-y-2">
+                          <Label htmlFor={`nav-path-${index}`}>Path</Label>
+                          <Input
+                            id={`nav-path-${index}`}
+                            placeholder="/example-path"
+                            value={item.path}
+                            onChange={(e) =>
+                              handleNavChange(index, "path", e.target.value)
+                            }
+                          />
+                        </div>
+                        <div className="w-full md:w-auto space-y-2">
+                          <Label>Visibility</Label>
+                          <select
+                            value={item.visibility}
+                            onChange={(e) =>
+                              handleNavChange(
+                                index,
+                                "visibility",
+                                e.target.value
+                              )
+                            }
+                            className="w-full border rounded-md p-2 text-sm"
+                          >
+                            <option value="all">All Users</option>
+                            <option value="logged-in">Logged In Only</option>
+                            <option value="logged-out">Logged Out Only</option>
+                            <option value="admin">Admin Only</option>
+                          </select>
+                        </div>
+                        <Button
+                          variant="destructive"
+                          onClick={() =>
+                            handleDeleteRequest("nav", index, item.label)
+                          }
+                          className="mt-2 md:mt-0"
+                          aria-label={`Remove navigation item ${item.label}`}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <Button
+                        onClick={() => {
+                          setLocalContent((prev) => ({
+                            ...prev,
+                            navItems: [
+                              ...(prev.navItems || []),
+                              { label: "", path: "", visibility: "all" },
+                            ],
+                          }));
+                        }}
+                      >
+                        Add Navigation Item
+                      </Button>
+                      <Button
+                        onClick={handleNavSubmit}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        Save Navigation
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Features Tab */}
+            <TabsContent value="features">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Features Section</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <Label>Section Title</Label>
+                      <Input
+                        placeholder="Why Choose Us?"
+                        value={localContent.featuresContent?.title || ""}
+                        onChange={(e) =>
+                          setLocalContent((prev) => ({
+                            ...prev,
+                            featuresContent: {
+                              ...prev.featuresContent,
+                              title: e.target.value,
+                            },
+                          }))
+                        }
+                      />
+                    </div>
+
+                    {/* Features List */}
+                    <div className="space-y-4">
+                      {localContent.featuresContent?.items?.map(
+                        (feature, index) => (
+                          <div
+                            key={index}
+                            className="space-y-4 p-4 border rounded-lg"
+                          >
+                            <div className="flex justify-between items-center">
+                              <h3 className="font-medium">
+                                Feature {index + 1}
+                              </h3>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() =>
+                                  handleDeleteRequest(
+                                    "feature",
+                                    index,
+                                    feature.title
+                                  )
+                                }
+                                aria-label={`Remove feature ${feature.title}`}
+                              >
+                                Remove
+                              </Button>
+                            </div>
+                            <div className="space-y-4">
+                              <div className="space-y-2">
+                                <Label>Title</Label>
+                                <Input
+                                  placeholder="Feature Title"
+                                  value={feature.title}
+                                  onChange={(e) => {
+                                    const newItems = [
+                                      ...(localContent.featuresContent?.items ||
+                                        []),
+                                    ];
+                                    newItems[index] = {
+                                      ...newItems[index],
+                                      title: e.target.value,
+                                    };
+                                    setLocalContent((prev) => ({
+                                      ...prev,
+                                      featuresContent: {
+                                        ...prev.featuresContent,
+                                        items: newItems,
+                                      },
+                                    }));
+                                  }}
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>Description</Label>
+                                <Textarea
+                                  placeholder="Feature description..."
+                                  value={feature.description}
+                                  onChange={(e) => {
+                                    const newItems = [
+                                      ...(localContent.featuresContent?.items ||
+                                        []),
+                                    ];
+                                    newItems[index] = {
+                                      ...newItems[index],
+                                      description: e.target.value,
+                                    };
+                                    setLocalContent((prev) => ({
+                                      ...prev,
+                                      featuresContent: {
+                                        ...prev.featuresContent,
+                                        items: newItems,
+                                      },
+                                    }));
+                                  }}
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>Icon</Label>
+                                <select
+                                  value={feature.icon}
+                                  onChange={(e) => {
+                                    const newItems = [
+                                      ...(localContent.featuresContent?.items ||
+                                        []),
+                                    ];
+                                    newItems[index] = {
+                                      ...newItems[index],
+                                      icon: e.target.value,
+                                    };
+                                    setLocalContent((prev) => ({
+                                      ...prev,
+                                      featuresContent: {
+                                        ...prev.featuresContent,
+                                        items: newItems,
+                                      },
+                                    }));
+                                  }}
+                                  className="w-full border rounded-md p-2 text-sm"
+                                >
+                                  <option value="CheckCircle">
+                                    Check Circle
+                                  </option>
+                                  <option value="Clock">Clock</option>
+                                  <option value="AlertTriangle">
+                                    Alert Triangle
+                                  </option>
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      )}
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <Button
+                        onClick={() => {
+                          setLocalContent((prev) => ({
+                            ...prev,
+                            featuresContent: {
+                              ...prev.featuresContent,
+                              items: [
+                                ...(prev.featuresContent?.items || []),
+                                {
+                                  title: "",
+                                  description: "",
+                                  icon: "CheckCircle",
+                                },
+                              ],
+                            },
+                          }));
+                        }}
+                      >
+                        Add Feature
+                      </Button>
+                      <Button
+                        onClick={handleFeaturesSubmit}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        Save Features
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Statistics Tab */}
+            <TabsContent value="statistics">
+              {/* Statistics Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Statistics Section</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {localContent.statisticsContent?.items?.map(
+                      (stat, index) => (
+                        <div
+                          key={index}
+                          className="space-y-2 p-4 border rounded-lg"
+                        >
+                          <div className="flex justify-between items-center">
+                            <h4 className="font-medium">
+                              Statistic {index + 1}
+                            </h4>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() =>
+                                handleDeleteRequest(
+                                  "statistic",
+                                  index,
+                                  stat.label
+                                )
+                              }
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <Input
+                              placeholder="Value (e.g., 1000+)"
+                              value={stat.value}
+                              onChange={(e) => {
+                                const newItems = [
+                                  ...(localContent.statisticsContent?.items ||
+                                    []),
+                                ];
+                                newItems[index] = {
+                                  ...newItems[index],
+                                  value: e.target.value,
+                                };
+                                setLocalContent((prev) => ({
+                                  ...prev,
+                                  statisticsContent: { items: newItems },
+                                }));
+                              }}
+                            />
+                            <Input
+                              placeholder="Label"
+                              value={stat.label}
+                              onChange={(e) => {
+                                const newItems = [
+                                  ...(localContent.statisticsContent?.items ||
+                                    []),
+                                ];
+                                newItems[index] = {
+                                  ...newItems[index],
+                                  label: e.target.value,
+                                };
+                                setLocalContent((prev) => ({
+                                  ...prev,
+                                  statisticsContent: { items: newItems },
+                                }));
+                              }}
+                            />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span>Color:</span>
+                            <Input
+                              type="color"
+                              value={stat.color}
+                              onChange={(e) => {
+                                const newItems = [
+                                  ...(localContent.statisticsContent?.items ||
+                                    []),
+                                ];
+                                newItems[index] = {
+                                  ...newItems[index],
+                                  color: e.target.value,
+                                };
+                                setLocalContent((prev) => ({
+                                  ...prev,
+                                  statisticsContent: { items: newItems },
+                                }));
+                              }}
+                              className="w-20 h-10"
+                            />
+                          </div>
+                        </div>
+                      )
+                    )}
                     <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() =>
-                        handleDeleteRequest("feature", index, feature.title)
-                      }
+                      onClick={() => {
+                        setLocalContent((prev) => ({
+                          ...prev,
+                          statisticsContent: {
+                            items: [
+                              ...(prev.statisticsContent?.items || []),
+                              { value: "", label: "", color: "#000000" },
+                            ],
+                          },
+                        }));
+                      }}
                     >
-                      Remove
+                      Add Statistic
+                    </Button>
+                    <Button onClick={handleStatisticsSubmit} className="m-2">
+                      Save Statistics
                     </Button>
                   </div>
-                  <Input
-                    placeholder="Title"
-                    value={feature.title}
-                    onChange={(e) => {
-                      const newItems = [
-                        ...(localContent.featuresContent?.items || []),
-                      ];
-                      newItems[index] = {
-                        ...newItems[index],
-                        title: e.target.value,
-                      };
-                      setLocalContent((prev) => ({
-                        ...prev,
-                        featuresContent: {
-                          ...prev.featuresContent,
-                          items: newItems,
-                        },
-                      }));
-                    }}
-                  />
-                  <Textarea
-                    placeholder="Description"
-                    value={feature.description}
-                    onChange={(e) => {
-                      const newItems = [
-                        ...(localContent.featuresContent?.items || []),
-                      ];
-                      newItems[index] = {
-                        ...newItems[index],
-                        description: e.target.value,
-                      };
-                      setLocalContent((prev) => ({
-                        ...prev,
-                        featuresContent: {
-                          ...prev.featuresContent,
-                          items: newItems,
-                        },
-                      }));
-                    }}
-                  />
-                  <select
-                    value={feature.icon}
-                    onChange={(e) => {
-                      const newItems = [
-                        ...(localContent.featuresContent?.items || []),
-                      ];
-                      newItems[index] = {
-                        ...newItems[index],
-                        icon: e.target.value,
-                      };
-                      setLocalContent((prev) => ({
-                        ...prev,
-                        featuresContent: {
-                          ...prev.featuresContent,
-                          items: newItems,
-                        },
-                      }));
-                    }}
-                    className="w-full border rounded-md p-2"
-                  >
-                    <option value="CheckCircle">Check Circle</option>
-                    <option value="Clock">Clock</option>
-                    <option value="AlertTriangle">Alert Triangle</option>
-                  </select>
-                </div>
-              ))}
-              <Button
-                onClick={() => {
-                  setLocalContent((prev) => ({
-                    ...prev,
-                    featuresContent: {
-                      ...prev.featuresContent,
-                      items: [
-                        ...(prev.featuresContent?.items || []),
-                        { title: "", description: "", icon: "CheckCircle" },
-                      ],
-                    },
-                  }));
-                }}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* CTA Tab */}
+            <TabsContent value="cta">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Call to Action Section</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <Input
+                      placeholder="Title"
+                      value={localContent.ctaContent?.title || ""}
+                      onChange={(e) =>
+                        setLocalContent((prev) => ({
+                          ...prev,
+                          ctaContent: {
+                            ...prev.ctaContent,
+                            title: e.target.value,
+                          },
+                        }))
+                      }
+                    />
+                    <Textarea
+                      placeholder="Subtitle"
+                      value={localContent.ctaContent?.subtitle || ""}
+                      onChange={(e) =>
+                        setLocalContent((prev) => ({
+                          ...prev,
+                          ctaContent: {
+                            ...prev.ctaContent,
+                            subtitle: e.target.value,
+                          },
+                        }))
+                      }
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                      <Input
+                        placeholder="Button Text"
+                        value={localContent.ctaContent?.buttonText || ""}
+                        onChange={(e) =>
+                          setLocalContent((prev) => ({
+                            ...prev,
+                            ctaContent: {
+                              ...prev.ctaContent,
+                              buttonText: e.target.value,
+                            },
+                          }))
+                        }
+                      />
+                      <Input
+                        placeholder="Button Link"
+                        value={localContent.ctaContent?.buttonLink || ""}
+                        onChange={(e) =>
+                          setLocalContent((prev) => ({
+                            ...prev,
+                            ctaContent: {
+                              ...prev.ctaContent,
+                              buttonLink: e.target.value,
+                            },
+                          }))
+                        }
+                      />
+                    </div>
+                    <Button onClick={handleCtaSubmit} className="mt-4">
+                      Save CTA
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>{" "}
+            </TabsContent>
+
+            {/* Footer Tab */}
+            <TabsContent value="footer">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Footer</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <Input
+                      placeholder="Company Name"
+                      value={localContent.footerContent?.companyName || ""}
+                      onChange={(e) =>
+                        setLocalContent((prev) => ({
+                          ...prev,
+                          footerContent: {
+                            ...prev.footerContent,
+                            companyName: e.target.value,
+                          },
+                        }))
+                      }
+                    />
+                    <Textarea
+                      placeholder="Description"
+                      value={localContent.footerContent?.description || ""}
+                      onChange={(e) =>
+                        setLocalContent((prev) => ({
+                          ...prev,
+                          footerContent: {
+                            ...prev.footerContent,
+                            description: e.target.value,
+                          },
+                        }))
+                      }
+                    />
+                    <div className="space-y-2">
+                      <h3 className="text-sm font-medium">Footer Links</h3>
+                      {localContent.footerContent?.links?.map((link, index) => (
+                        <div key={index} className="flex gap-4">
+                          <Input
+                            placeholder="Label"
+                            value={link.label}
+                            onChange={(e) => {
+                              const newLinks = [
+                                ...(localContent.footerContent?.links || []),
+                              ];
+                              newLinks[index] = {
+                                ...newLinks[index],
+                                label: e.target.value,
+                              };
+                              setLocalContent((prev) => ({
+                                ...prev,
+                                footerContent: {
+                                  ...prev.footerContent,
+                                  links: newLinks,
+                                },
+                              }));
+                            }}
+                          />
+                          <Input
+                            placeholder="Path"
+                            value={link.path}
+                            onChange={(e) => {
+                              const newLinks = [
+                                ...(localContent.footerContent?.links || []),
+                              ];
+                              newLinks[index] = {
+                                ...newLinks[index],
+                                path: e.target.value,
+                              };
+                              setLocalContent((prev) => ({
+                                ...prev,
+                                footerContent: {
+                                  ...prev.footerContent,
+                                  links: newLinks,
+                                },
+                              }));
+                            }}
+                          />
+                          <Button
+                            variant="destructive"
+                            onClick={() =>
+                              handleDeleteRequest("footer", index, link.label)
+                            }
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      ))}
+                      <Button
+                        className="mt-6"
+                        onClick={() => {
+                          setLocalContent((prev) => ({
+                            ...prev,
+                            footerContent: {
+                              ...prev.footerContent,
+                              links: [
+                                ...(prev.footerContent?.links || []),
+                                { label: "", path: "", visibility: "all" },
+                              ],
+                            },
+                          }));
+                        }}
+                      >
+                        Add Footer Link
+                      </Button>
+                    </div>
+                    <Button onClick={handleFooterSubmit} className="mt-4">
+                      Save Footer
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        <AlertDialog
+          open={deleteConfirm.isOpen}
+          onOpenChange={(isOpen) =>
+            setDeleteConfirm((prev) => ({ ...prev, isOpen }))
+          }
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete{" "}
+                <span className="text-black font-medium">
+                  {deleteConfirm.itemLabel}
+                </span>
+                ? This action cannot be undone until you save your changes.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="sm:space-x-2">
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteConfirm}
+                className="bg-red-600 hover:bg-red-700 text-white"
               >
-                Add Feature
-              </Button>
-              <Button onClick={handleFeaturesSubmit} className="m-2">
-                Save Features
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Statistics Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Statistics Section</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {localContent.statisticsContent?.items?.map((stat, index) => (
-              <div key={index} className="space-y-2 p-4 border rounded-lg">
-                <div className="flex justify-between items-center">
-                  <h4 className="font-medium">Statistic {index + 1}</h4>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() =>
-                      handleDeleteRequest("statistic", index, stat.label)
-                    }
-                  >
-                    Remove
-                  </Button>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <Input
-                    placeholder="Value (e.g., 1000+)"
-                    value={stat.value}
-                    onChange={(e) => {
-                      const newItems = [
-                        ...(localContent.statisticsContent?.items || []),
-                      ];
-                      newItems[index] = {
-                        ...newItems[index],
-                        value: e.target.value,
-                      };
-                      setLocalContent((prev) => ({
-                        ...prev,
-                        statisticsContent: { items: newItems },
-                      }));
-                    }}
-                  />
-                  <Input
-                    placeholder="Label"
-                    value={stat.label}
-                    onChange={(e) => {
-                      const newItems = [
-                        ...(localContent.statisticsContent?.items || []),
-                      ];
-                      newItems[index] = {
-                        ...newItems[index],
-                        label: e.target.value,
-                      };
-                      setLocalContent((prev) => ({
-                        ...prev,
-                        statisticsContent: { items: newItems },
-                      }));
-                    }}
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <span>Color:</span>
-                  <Input
-                    type="color"
-                    value={stat.color}
-                    onChange={(e) => {
-                      const newItems = [
-                        ...(localContent.statisticsContent?.items || []),
-                      ];
-                      newItems[index] = {
-                        ...newItems[index],
-                        color: e.target.value,
-                      };
-                      setLocalContent((prev) => ({
-                        ...prev,
-                        statisticsContent: { items: newItems },
-                      }));
-                    }}
-                    className="w-20 h-10"
-                  />
-                </div>
-              </div>
-            ))}
-            <Button
-              onClick={() => {
-                setLocalContent((prev) => ({
-                  ...prev,
-                  statisticsContent: {
-                    items: [
-                      ...(prev.statisticsContent?.items || []),
-                      { value: "", label: "", color: "#000000" },
-                    ],
-                  },
-                }));
-              }}
-            >
-              Add Statistic
-            </Button>
-            <Button onClick={handleStatisticsSubmit} className="m-2">
-              Save Statistics
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* CTA Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Call to Action Section</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <Input
-              placeholder="Title"
-              value={localContent.ctaContent?.title || ""}
-              onChange={(e) =>
-                setLocalContent((prev) => ({
-                  ...prev,
-                  ctaContent: {
-                    ...prev.ctaContent,
-                    title: e.target.value,
-                  },
-                }))
-              }
-            />
-            <Textarea
-              placeholder="Subtitle"
-              value={localContent.ctaContent?.subtitle || ""}
-              onChange={(e) =>
-                setLocalContent((prev) => ({
-                  ...prev,
-                  ctaContent: {
-                    ...prev.ctaContent,
-                    subtitle: e.target.value,
-                  },
-                }))
-              }
-            />
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                placeholder="Button Text"
-                value={localContent.ctaContent?.buttonText || ""}
-                onChange={(e) =>
-                  setLocalContent((prev) => ({
-                    ...prev,
-                    ctaContent: {
-                      ...prev.ctaContent,
-                      buttonText: e.target.value,
-                    },
-                  }))
-                }
-              />
-              <Input
-                placeholder="Button Link"
-                value={localContent.ctaContent?.buttonLink || ""}
-                onChange={(e) =>
-                  setLocalContent((prev) => ({
-                    ...prev,
-                    ctaContent: {
-                      ...prev.ctaContent,
-                      buttonLink: e.target.value,
-                    },
-                  }))
-                }
-              />
-            </div>
-            <Button onClick={handleCtaSubmit} className="mt-4">
-              Save CTA
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Footer Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Footer</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <Input
-              placeholder="Company Name"
-              value={localContent.footerContent?.companyName || ""}
-              onChange={(e) =>
-                setLocalContent((prev) => ({
-                  ...prev,
-                  footerContent: {
-                    ...prev.footerContent,
-                    companyName: e.target.value,
-                  },
-                }))
-              }
-            />
-            <Textarea
-              placeholder="Description"
-              value={localContent.footerContent?.description || ""}
-              onChange={(e) =>
-                setLocalContent((prev) => ({
-                  ...prev,
-                  footerContent: {
-                    ...prev.footerContent,
-                    description: e.target.value,
-                  },
-                }))
-              }
-            />
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium">Footer Links</h3>
-              {localContent.footerContent?.links?.map((link, index) => (
-                <div key={index} className="flex gap-4">
-                  <Input
-                    placeholder="Label"
-                    value={link.label}
-                    onChange={(e) => {
-                      const newLinks = [
-                        ...(localContent.footerContent?.links || []),
-                      ];
-                      newLinks[index] = {
-                        ...newLinks[index],
-                        label: e.target.value,
-                      };
-                      setLocalContent((prev) => ({
-                        ...prev,
-                        footerContent: {
-                          ...prev.footerContent,
-                          links: newLinks,
-                        },
-                      }));
-                    }}
-                  />
-                  <Input
-                    placeholder="Path"
-                    value={link.path}
-                    onChange={(e) => {
-                      const newLinks = [
-                        ...(localContent.footerContent?.links || []),
-                      ];
-                      newLinks[index] = {
-                        ...newLinks[index],
-                        path: e.target.value,
-                      };
-                      setLocalContent((prev) => ({
-                        ...prev,
-                        footerContent: {
-                          ...prev.footerContent,
-                          links: newLinks,
-                        },
-                      }));
-                    }}
-                  />
-                  <Button
-                    variant="destructive"
-                    onClick={() =>
-                      handleDeleteRequest("footer", index, link.label)
-                    }
-                  >
-                    Remove
-                  </Button>
-                </div>
-              ))}
-              <Button
-                className="mt-6"
-                onClick={() => {
-                  setLocalContent((prev) => ({
-                    ...prev,
-                    footerContent: {
-                      ...prev.footerContent,
-                      links: [
-                        ...(prev.footerContent?.links || []),
-                        { label: "", path: "", visibility: "all" },
-                      ],
-                    },
-                  }));
-                }}
-              >
-                Add Footer Link
-              </Button>
-            </div>
-            <Button onClick={handleFooterSubmit} className="mt-4">
-              Save Footer
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog
-        open={deleteConfirm.isOpen}
-        onOpenChange={(isOpen) =>
-          setDeleteConfirm((prev) => ({ ...prev, isOpen }))
-        }
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete{" "}
-              <span className="text-black font-medium">
-                {deleteConfirm.itemLabel}
-              </span>
-              ? This action cannot be undone until you save your changes.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </>
   );
 };
 

@@ -27,6 +27,7 @@ const UserProfile = () => {
   const accessToken = useSelector(
     (state: RootState) => state.auth?.accessToken
   );
+  const role = useSelector((state: RootState) => state.userdata?.role);
   const userData = useSelector((state: RootState) => state.userdata);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [isNameDialogOpen, setIsNameDialogOpen] = useState(false);
@@ -56,7 +57,7 @@ const UserProfile = () => {
         setUserData({
           username: updatedUser.name || "",
           email: updatedUser.email,
-          role: updatedUser.role,
+          role: role,
         })
       );
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
@@ -89,6 +90,26 @@ const UserProfile = () => {
       setPasswordError(passwordValidationError);
       return;
     }
+    if (
+      passwordData.currentPassword === "" ||
+      passwordData.newPassword === ""
+    ) {
+      toast({
+        title: "Error",
+        description: "Please fill in both current and new passwords",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (passwordData.currentPassword === passwordData.newPassword) {
+      toast({
+        title: "Error",
+        description: "Both passwords are the same",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setPasswordError("");
     updateProfileMutation.mutate({
       currentPassword: passwordData.currentPassword,
@@ -145,7 +166,15 @@ const UserProfile = () => {
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
-                    updateProfileMutation.mutate({ name: formData.name });
+                    if (formData.name !== userData.username) {
+                      updateProfileMutation.mutate({ name: formData.name });
+                    } else {
+                      toast({
+                        title: "No Changes",
+                        description: "The name is the same as the current name",
+                        variant: "destructive",
+                      });
+                    }
                   }}
                   className="space-y-4 pt-4"
                 >

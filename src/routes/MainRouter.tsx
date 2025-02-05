@@ -10,9 +10,9 @@ import {
   RouteConfig,
 } from "./RoutesConfig";
 import useDynamicRoutes from "../hooks/use-dynamic-pages-routes";
-import {DashboardLayout} from "../features/layout/Dashboardlayout"
-import {BaseLayout} from "../features/layout/Baselayout"
-import {AuthLayout} from "../features/layout/Authlayout"
+import { DashboardLayout } from "../components/layout/Dashboardlayout";
+import { BaseLayout } from "../components/layout/Baselayout";
+import { AuthLayout } from "../components/layout/Authlayout";
 
 // Layout mapping object
 const layoutComponents = {
@@ -23,7 +23,7 @@ const layoutComponents = {
 
 const MainRouter: React.FC = () => {
   const { dynamicRoutes, isLoading } = useDynamicRoutes();
-  
+
   if (isLoading) {
     return (
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
@@ -57,19 +57,19 @@ const MainRouter: React.FC = () => {
     let element = <Component />;
 
     // Check path pattern for layout and protection
-    if (route.path.startsWith('/dashboard/admin')) {
+    if (route.path.startsWith("/dashboard/admin")) {
       element = (
         <AdminRoute>
           <DashboardLayout>{element}</DashboardLayout>
         </AdminRoute>
       );
-    } else if (route.path.startsWith('/dashboard')) {
+    } else if (route.path.startsWith("/dashboard")) {
       element = (
         <ProtectedRoute>
           <DashboardLayout>{element}</DashboardLayout>
         </ProtectedRoute>
       );
-    } else if (route.path.startsWith('/')){
+    } else if (route.path.startsWith("/")) {
       element = <BaseLayout>{element}</BaseLayout>;
     }
 
