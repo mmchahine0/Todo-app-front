@@ -14,7 +14,7 @@ interface ApiOptions {
   params?: unknown;
 }
 
-const BASE_URL = "https://todo-app-back-gp4v.onrender.com/api/v1";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 axios.defaults.withCredentials = true;
 

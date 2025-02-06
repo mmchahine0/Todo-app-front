@@ -203,7 +203,7 @@ const AdminDashboard = () => {
         />
       </Helmet>
 
-      <div className="container mx-auto py-6 px-4 md:px-6">
+      <div className="w-full max-w-full overflow-hidden">
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <h1 className="text-2xl font-bold" id="dashboard-title">
             User Management
@@ -233,86 +233,90 @@ const AdminDashboard = () => {
         </header>
 
         {/* Desktop Table View */}
-        <div className="hidden md:block rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[200px]">Name</TableHead>
-                <TableHead className="w-[250px]">Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
+        <div className="hidden lg:block overflow-x-auto">
+          <div className="min-w-full border rounded-md">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
-                    <div className="flex items-center justify-center">
-                      <div
-                        className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"
-                        role="status"
-                        aria-label="Loading users"
-                      />
-                    </div>
-                  </TableCell>
+                  <TableHead className="w-[200px]">Name</TableHead>
+                  <TableHead className="w-[250px]">Email</TableHead>
+                  <TableHead className="w-[250px]">Role</TableHead>
+                  <TableHead className="w-[250px]">Status</TableHead>
+                  <TableHead className="w-[250px]">Actions</TableHead>
                 </TableRow>
-              ) : (
-                data?.data.map((user: User) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.name}</TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>{user.role}</TableCell>
-                    <TableCell>
-                      <span
-                        className={`inline-flex px-2 py-1 rounded-full text-sm
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-24 text-center">
+                      <div className="flex items-center justify-center">
+                        <div
+                          className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"
+                          role="status"
+                          aria-label="Loading users"
+                        />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  data?.data.map((user: User) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium">{user.name}</TableCell>
+                      <TableCell>{user.email}</TableCell>
+                      <TableCell>{user.role}</TableCell>
+                      <TableCell>
+                        <span
+                          className={`inline-flex px-2 py-1 rounded-full text-sm
                         ${
                           user.suspended
                             ? "bg-red-100 text-red-800"
                             : "bg-green-100 text-green-800"
                         }`}
-                      >
-                        {user.suspended ? "Suspended" : "Active"}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {id === user.id ? (
-                        <span className="inline-flex px-3 py-1 bg-gray-100 rounded-full text-sm">
-                          You
+                        >
+                          {user.suspended ? "Suspended" : "Active"}
                         </span>
-                      ) : (
-                        <div className="flex items-center justify-end gap-4">
-                          <div className="flex items-center gap-2">
-                            <Switch
-                              checked={user.role === "ADMIN"}
-                              onCheckedChange={(checked) =>
-                                roleMutation.mutate({
-                                  userId: user.id,
-                                  makeAdmin: checked,
-                                })
+                      </TableCell>
+                      <TableCell>
+                        {id === user.id ? (
+                          <span className="inline-flex px-3 py-1 bg-gray-100 rounded-full text-sm">
+                            You
+                          </span>
+                        ) : (
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                              <Switch
+                                checked={user.role === "ADMIN"}
+                                onCheckedChange={(checked) =>
+                                  roleMutation.mutate({
+                                    userId: user.id,
+                                    makeAdmin: checked,
+                                  })
+                                }
+                                aria-label={`Toggle admin role for ${user.name}`}
+                              />
+                            </div>
+                            <Button
+                              variant={
+                                user.suspended ? "default" : "destructive"
                               }
-                              aria-label={`Toggle admin role for ${user.name}`}
-                            />
+                              onClick={() => handleStatusUpdate(user)}
+                              className="whitespace-nowrap"
+                            >
+                              {user.suspended ? "Unsuspend" : "Suspend"}
+                            </Button>
                           </div>
-                          <Button
-                            variant={user.suspended ? "default" : "destructive"}
-                            onClick={() => handleStatusUpdate(user)}
-                            className="whitespace-nowrap"
-                          >
-                            {user.suspended ? "Unsuspend" : "Suspend"}
-                          </Button>
-                        </div>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
 
         {/* Mobile Card View */}
-        <div className="md:hidden">
+        <div className="lg:hidden">
           {isLoading ? (
             <div className="flex justify-center py-8">
               <div
@@ -329,7 +333,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Pagination */}
-        <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 py-4">
+        <div className="mt-4 flex flex-col items-center justify-between gap-4 py-4">
           <div className="flex items-center gap-2">
             <Button
               variant="outline"

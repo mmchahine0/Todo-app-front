@@ -378,7 +378,7 @@ const LayoutCreation = () => {
         <meta name="description" content="Manage page layouts and routing" />
       </Helmet>
 
-      <div className="container mx-auto py-6 px-4">
+      <div className="w-full max-w-full overflow-hidden">
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <h1 className="text-2xl font-bold">Layout Management</h1>
 
@@ -407,88 +407,92 @@ const LayoutCreation = () => {
         </header>
 
         {/* Desktop Table View */}
-        <div className="hidden md:block rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[200px]">Title</TableHead>
-                <TableHead className="w-[250px]">Path</TableHead>
-                <TableHead>Layout</TableHead>
-                <TableHead>Protected</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {pagesLoading ? (
+        <div className="hidden lg:block overflow-x-auto">
+          <div className="min-w-full border rounded-md">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
-                    <div className="flex justify-center">
-                      <div
-                        className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"
-                        role="status"
-                        aria-label="Loading pages"
-                      />
-                    </div>
-                  </TableCell>
+                  <TableHead className="w-[200px]">Title</TableHead>
+                  <TableHead className="w-[250px]">Path</TableHead>
+                  <TableHead className="w-[250px]">Layout</TableHead>
+                  <TableHead className="w-[250px]">Protected</TableHead>
+                  <TableHead className="w-[250px]">Status</TableHead>
+                  <TableHead className="w-[250px]">Actions</TableHead>
                 </TableRow>
-              ) : (
-                pages?.data.map((page: DynamicPage) => (
-                  <TableRow key={page.id}>
-                    <TableCell className="font-medium">{page.title}</TableCell>
-                    <TableCell>{page.path}</TableCell>
-                    <TableCell>{page.layout}</TableCell>
-                    <TableCell>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs ${
-                          page.isProtected
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-green-100 text-green-800"
-                        }`}
-                      >
-                        {page.isProtected ? "Protected" : "Public"}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs ${
-                          page.isPublished
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {page.isPublished ? "Published" : "Draft"}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(page)}
-                          aria-label={`Edit ${page.title}`}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDeleteRequest(page)}
-                          aria-label={`Delete ${page.title}`}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+              </TableHeader>
+              <TableBody>
+                {pagesLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-24 text-center">
+                      <div className="flex justify-center">
+                        <div
+                          className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"
+                          role="status"
+                          aria-label="Loading pages"
+                        />
                       </div>
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  pages?.data.map((page: DynamicPage) => (
+                    <TableRow key={page.id}>
+                      <TableCell className="font-medium">
+                        {page.title}
+                      </TableCell>
+                      <TableCell>{page.path}</TableCell>
+                      <TableCell>{page.layout}</TableCell>
+                      <TableCell>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs ${
+                            page.isProtected
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-green-100 text-green-800"
+                          }`}
+                        >
+                          {page.isProtected ? "Protected" : "Public"}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs ${
+                            page.isPublished
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {page.isPublished ? "Published" : "Draft"}
+                        </span>
+                      </TableCell>
+                      <TableCell className="">
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(page)}
+                            aria-label={`Edit ${page.title}`}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDeleteRequest(page)}
+                            aria-label={`Delete ${page.title}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
 
         {/* Mobile Card View */}
-        <div className="md:hidden">
+        <div className="lg:hidden">
           {pagesLoading ? (
             <div className="flex justify-center py-8">
               <div

@@ -1,11 +1,21 @@
-import type { TodoInput } from "./Todo.types";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import type { TodoInput, StatusMessage, DeleteDialogState } from "./Todo.types";
 import {
   getTodosByUserId,
   createTodo,
   updateTodo,
   deleteTodo,
 } from "./Todo.service";
-import { useRef, useCallback, useState } from "react";
+import { useRef, useCallback, useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/persist/persist";
 import { useToast } from "@/hooks/use-toast";
@@ -42,8 +52,46 @@ const TodoDashboard = () => {
     content: string;
   } | null>(null);
 
+  const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(
+    null
+  );
+
+  const [deleteDialog, setDeleteDialog] = useState<DeleteDialogState>({
+    isOpen: false,
+    todoId: "",
+    todoTitle: "",
+  });
+
+  // Clear status message after announcement
+  useEffect(() => {
+    if (statusMessage) {
+      const timer = setTimeout(() => setStatusMessage(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [statusMessage]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyboard = (e: KeyboardEvent) => {
+      // Alt + N for new todo
+      if (e.altKey && e.key === "n") {
+        e.preventDefault();
+        document
+          .querySelector<HTMLInputElement>('input[name="title"]')
+          ?.focus();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyboard);
+    return () => window.removeEventListener("keydown", handleKeyboard);
+  }, []);
+
   const validateFields = (title: string, content: string): boolean => {
     if (!title.trim() || !content.trim()) {
+      setStatusMessage({
+        type: "error",
+        message: "Title and content cannot be empty",
+      });
       toast({
         title: "Validation Error",
         description: "Title and content cannot be empty",
@@ -53,7 +101,6 @@ const TodoDashboard = () => {
     }
     return true;
   };
-
   // Infinite Query for todos with filter
   const {
     data,
@@ -82,14 +129,22 @@ const TodoDashboard = () => {
     mutationFn: (newTodo: TodoInput) => createTodo(newTodo, accessToken),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["todos", filterStatus] });
+      setStatusMessage({
+        type: "success",
+        message: "Todo created successfully",
+      });
       toast({
-        title: "Todo created",
-        description: "Your todo has been created successfully.",
+        title: "Success",
+        description: "Todo created successfully",
         duration: 2000,
       });
       setInputTodos({ title: "", content: "", completed: false });
     },
     onError: () => {
+      setStatusMessage({
+        type: "error",
+        message: "Failed to create todo",
+      });
       toast({
         title: "Error",
         description: "Failed to create todo",
@@ -104,6 +159,10 @@ const TodoDashboard = () => {
       updateTodo(id, todo, accessToken),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["todos", filterStatus] });
+      setStatusMessage({
+        type: "success",
+        message: "Todo updated successfully",
+      });
       toast({
         title: "Todo updated",
         description: "Your todo has been updated successfully",
@@ -112,6 +171,10 @@ const TodoDashboard = () => {
       setEditingTodo(null);
     },
     onError: () => {
+      setStatusMessage({
+        type: "error",
+        message: "Failed to update todo",
+      });
       toast({
         title: "Error",
         description: "Failed to update todo",
@@ -125,6 +188,10 @@ const TodoDashboard = () => {
     mutationFn: (id: string) => deleteTodo(id, accessToken),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["todos", filterStatus] });
+      setStatusMessage({
+        type: "success",
+        message: "Todo deleted successfully",
+      });
       toast({
         title: "Todo deleted",
         description: "Your todo has been deleted successfully.",
@@ -132,6 +199,10 @@ const TodoDashboard = () => {
       });
     },
     onError: () => {
+      setStatusMessage({
+        type: "error",
+        message: "Failed to delete todo",
+      });
       toast({
         title: "Error",
         description: "Failed to delete todo",
@@ -242,6 +313,21 @@ const TodoDashboard = () => {
     setFilterStatus(newStatus);
   };
 
+  const handleConfirmDelete = () => {
+    if (deleteDialog.todoId) {
+      deleteMutation.mutate(deleteDialog.todoId);
+    }
+    setDeleteDialog((prev) => ({ ...prev, isOpen: false }));
+  };
+
+  const handleDeleteClick = (todoId: string, todoTitle: string) => {
+    setDeleteDialog({
+      isOpen: true,
+      todoId,
+      todoTitle,
+    });
+  };
+
   // Flatten todos from all pages
   const todos = data?.pages.flatMap((page) => page.data) ?? [];
   const totalItems = data?.pages[0]?.pagination.totalItems ?? 0;
@@ -251,14 +337,27 @@ const TodoDashboard = () => {
       <Helmet>
         <title>Todo Dashboard | Your App</title>
         <meta name="description" content="Manage your todos efficiently" />
+        <meta name="keywords" content="todo, task management, productivity" />
       </Helmet>
 
-      <main className="max-w-4xl mx-auto p-4 md:p-6">
+      {/* Screen reader announcements */}
+      <div className="sr-only" role="status" aria-live="polite">
+        {statusMessage?.message}
+      </div>
+
+      <main
+        className="max-w-4xl mx-auto p-4 md:p-6"
+        aria-labelledby="dashboard-title"
+      >
         <h1
+          id="dashboard-title"
           className="text-2xl md:text-3xl font-bold mb-6"
-          id="todo-dashboard-title"
+          tabIndex={-1}
         >
           Todo Dashboard
+          <span className="sr-only">
+            {`Currently showing ${filterStatus} todos. Press Alt + N to create a new todo.`}
+          </span>
         </h1>
 
         {/* Create Todo Form */}
@@ -278,6 +377,8 @@ const TodoDashboard = () => {
                 className="w-full"
                 aria-label="Todo title"
                 required
+                aria-required="true"
+                aria-invalid={createMutation.isError}
               />
               <Input
                 type="text"
@@ -288,25 +389,34 @@ const TodoDashboard = () => {
                 className="w-full"
                 aria-label="Todo description"
                 required
+                aria-required="true"
+                aria-invalid={createMutation.isError}
               />
             </div>
             <Button
               type="submit"
               disabled={createMutation.isPending}
-              className="w-full md:w-auto bg-green-500 hover:bg-green-600 text-white"
+              className="w-full md:w-auto bg-green-500 hover:bg-green-600 text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2"
               aria-busy={createMutation.isPending}
             >
-              {createMutation.isPending ? "Adding..." : "Add Todo"}
+              <span className="sr-only">
+                {createMutation.isPending
+                  ? "Creating new todo..."
+                  : "Create new todo"}
+              </span>
+              <span aria-hidden="true">
+                {createMutation.isPending ? "Adding..." : "Add Todo"}
+              </span>
             </Button>
           </form>
         </Card>
 
         {/* Filter Controls */}
-        <div className="mb-6">
+        <div className="mb-6" role="region" aria-label="Todo filters">
           <div
             className="flex flex-wrap gap-2"
-            role="group"
-            aria-label="Filter todos"
+            role="radiogroup"
+            aria-label="Filter todos by status"
           >
             {(["all", "active", "completed"] as const).map((status) => (
               <Button
@@ -316,8 +426,10 @@ const TodoDashboard = () => {
                   filterStatus === status
                     ? "bg-green-500 text-white"
                     : "bg-green-100 hover:bg-green-200 text-green-800"
-                }`}
-                aria-pressed={filterStatus === status}
+                } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2`}
+                role="radio"
+                aria-checked={filterStatus === status}
+                aria-label={`Show ${status} todos`}
               >
                 {status.charAt(0).toUpperCase() + status.slice(1)}
               </Button>
@@ -330,18 +442,28 @@ const TodoDashboard = () => {
           <div
             className="flex justify-center p-8"
             role="status"
+            aria-busy="true"
             aria-label="Loading todos"
           >
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500" />
+            <div
+              className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"
+              aria-hidden="true"
+            />
+            <span className="sr-only">Loading todos...</span>
           </div>
         ) : (
           <>
-            <ul className="space-y-4" aria-label="Todo list" role="list">
+            <ul
+              className="space-y-4"
+              aria-label={`${filterStatus} todos list`}
+              role="list"
+            >
               {todos.map((todo, index) => (
                 <li
                   key={todo.id}
                   ref={index === todos.length - 1 ? lastTodoElementRef : null}
                   className="group bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                  aria-label={`Todo item: ${todo.title}`}
                 >
                   <Card className="p-4">
                     {editingTodo && editingTodo.id === todo.id ? (
@@ -358,6 +480,8 @@ const TodoDashboard = () => {
                             onChange={handleEditInputChange}
                             className="w-full"
                             aria-label="Edit todo title"
+                            required
+                            aria-required="true"
                           />
                           <Input
                             type="text"
@@ -366,20 +490,23 @@ const TodoDashboard = () => {
                             onChange={handleEditInputChange}
                             className="w-full"
                             aria-label="Edit todo description"
+                            required
+                            aria-required="true"
                           />
                         </div>
                         <div className="flex gap-2 justify-end">
                           <Button
                             type="submit"
                             disabled={updateMutation.isPending}
-                            className="bg-green-500 hover:bg-green-600 text-white"
+                            className="bg-green-500 hover:bg-green-600 text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2"
+                            aria-busy={updateMutation.isPending}
                           >
                             {updateMutation.isPending ? "Saving..." : "Save"}
                           </Button>
                           <Button
                             type="button"
                             onClick={() => setEditingTodo(null)}
-                            className="bg-gray-500 hover:bg-gray-600 text-white"
+                            className="bg-gray-500 hover:bg-gray-600 text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
                           >
                             Cancel
                           </Button>
@@ -394,7 +521,7 @@ const TodoDashboard = () => {
                             onChange={() =>
                               handleToggleComplete(todo.id, todo.completed)
                             }
-                            className="mt-1 md:mt-0 h-4 w-4 rounded border-gray-300"
+                            className="mt-1 md:mt-0 h-4 w-4 rounded border-gray-300 focus:ring-2 focus:ring-green-500"
                             aria-label={`Mark "${todo.title}" as ${
                               todo.completed ? "incomplete" : "complete"
                             }`}
@@ -420,15 +547,17 @@ const TodoDashboard = () => {
                                 content: todo.content,
                               })
                             }
-                            className="bg-green-500 hover:bg-green-600 text-white"
+                            className="bg-green-500 hover:bg-green-600 text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2"
                             aria-label={`Edit "${todo.title}"`}
                           >
                             Edit
                           </Button>
                           <Button
-                            onClick={() => deleteMutation.mutate(todo.id)}
+                            onClick={() =>
+                              handleDeleteClick(todo.id, todo.title)
+                            }
                             disabled={deleteMutation.isPending}
-                            className="bg-red-500 hover:bg-red-600 text-white"
+                            className="bg-red-500 hover:bg-red-600 text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
                             aria-label={`Delete "${todo.title}"`}
                           >
                             {deleteMutation.isPending
@@ -447,14 +576,18 @@ const TodoDashboard = () => {
               <div
                 className="text-center py-8 text-red-500"
                 role="alert"
-                aria-live="polite"
+                aria-live="assertive"
               >
                 Error loading todos. Please try again.
               </div>
             )}
 
             {!isLoading && todos.length === 0 && (
-              <div className="text-center py-8 text-gray-500" role="status">
+              <div
+                className="text-center py-8 text-gray-500"
+                role="status"
+                aria-live="polite"
+              >
                 {filterStatus === "all"
                   ? "No todos found. Create one to get started!"
                   : `No ${filterStatus} todos found.`}
@@ -465,13 +598,42 @@ const TodoDashboard = () => {
               <div
                 className="text-center mt-6 text-gray-600"
                 aria-live="polite"
+                role="status"
               >
-                Showing {todos.length} of {totalItems} items
+                Showing {todos.length} of {totalItems} todos
               </div>
             )}
           </>
         )}
       </main>
+      <AlertDialog
+        open={deleteDialog.isOpen}
+        onOpenChange={(isOpen) =>
+          setDeleteDialog((prev) => ({ ...prev, isOpen }))
+        }
+      >
+        <AlertDialogContent className="sm:max-w-[425px]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Todo</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete{" "}
+              <span className="font-medium text-black">
+                {deleteDialog.todoTitle}
+              </span>
+              ? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="sm:space-x-2">
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-red-500 hover:bg-red-600 text-white font-semibold"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/persist/persist";
 import { useToast } from "@/hooks/use-toast";
@@ -9,6 +10,7 @@ import { setUserData } from "@/redux/slices/userSlice";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { queryClient } from "../../lib/queryClient";
 import { validatePassword } from "../../utils/validationConstants";
 import {
@@ -90,21 +92,20 @@ const UserProfile = () => {
       setPasswordError(passwordValidationError);
       return;
     }
-    if (
-      passwordData.currentPassword === "" ||
-      passwordData.newPassword === ""
-    ) {
+
+    if (!passwordData.currentPassword || !passwordData.newPassword) {
       toast({
         title: "Error",
-        description: "Please fill in both current and new passwords",
+        description: "Please fill in both password fields",
         variant: "destructive",
       });
       return;
     }
+
     if (passwordData.currentPassword === passwordData.newPassword) {
       toast({
         title: "Error",
-        description: "Both passwords are the same",
+        description: "New password must be different from current password",
         variant: "destructive",
       });
       return;
@@ -119,165 +120,243 @@ const UserProfile = () => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+      <div className="flex justify-center items-center min-h-[calc(100vh-4rem)]">
+        <div
+          className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"
+          role="status"
+          aria-label="Loading..."
+        />
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-4 max-w-3xl">
-      <Card className="bg-white shadow-lg">
-        <CardHeader className="border-b">
-          <CardTitle className="text-2xl font-bold">Profile Settings</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <div className="space-y-6">
-            <div className="flex flex-col gap-6">
-              <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                <User className="h-5 w-5 text-gray-500" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Name</p>
-                  <p className="text-lg font-semibold">{userData.username}</p>
-                </div>
-              </div>
+    <>
+      <Helmet>
+        <title>Profile Settings | User Account</title>
+        <meta
+          name="description"
+          content="Manage your account profile information, update your name, and change your password securely."
+        />
+        <meta
+          name="keywords"
+          content="user profile, account settings, password change, personal information"
+        />
+        <meta property="og:title" content="Profile Settings | User Account" />
+        <meta
+          property="og:description"
+          content="Secure management of user profile and account settings"
+        />
+      </Helmet>
 
-              <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                <Mail className="h-5 w-5 text-gray-500" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Email</p>
-                  <p className="text-lg font-semibold">{userData.email}</p>
+      <div className="container mx-auto p-4 max-w-3xl min-h-[calc(100vh-4rem)]">
+        <Card className="bg-white shadow-sm rounded-lg">
+          <CardHeader className="border-b">
+            <CardTitle className="text-2xl font-bold text-gray-900">
+              Profile Settings
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="space-y-8">
+              <div className="grid gap-6">
+                {/* User Info Section */}
+                <div className="grid gap-4">
+                  <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                    <User
+                      className="h-5 w-5 text-gray-600"
+                      aria-hidden="true"
+                    />
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Name</p>
+                      <p
+                        className="text-lg font-semibold text-gray-900"
+                        aria-live="polite"
+                      >
+                        {userData.username}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                    <Mail
+                      className="h-5 w-5 text-gray-600"
+                      aria-hidden="true"
+                    />
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Email</p>
+                      <p
+                        className="text-lg font-semibold text-gray-900"
+                        aria-live="polite"
+                      >
+                        {userData.email}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Dialog
+                    open={isNameDialogOpen}
+                    onOpenChange={setIsNameDialogOpen}
+                  >
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full sm:w-auto justify-start"
+                        aria-label="Change name"
+                      >
+                        <User className="mr-2 h-4 w-4" />
+                        Change Name
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-[95vw] sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle className="text-lg">
+                          Change Name
+                        </DialogTitle>
+                      </DialogHeader>
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          if (
+                            formData.name &&
+                            formData.name.trim() === userData.username
+                          ) {
+                            toast({
+                              title: "No Changes",
+                              description: "The name matches your current name",
+                              variant: "destructive",
+                            });
+                            return;
+                          }
+                          updateProfileMutation.mutate({ name: formData.name });
+                        }}
+                        className="space-y-4"
+                      >
+                        <div className="space-y-2">
+                          <Label htmlFor="name">New Name</Label>
+                          <Input
+                            id="name"
+                            type="text"
+                            value={formData.name}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                name: e.target.value,
+                              }))
+                            }
+                            required
+                            minLength={2}
+                            aria-required="true"
+                          />
+                        </div>
+                        <Button
+                          type="submit"
+                          className="w-full"
+                          disabled={updateProfileMutation.isPending}
+                          aria-disabled={updateProfileMutation.isPending}
+                        >
+                          {updateProfileMutation.isPending
+                            ? "Updating..."
+                            : "Update Name"}
+                        </Button>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+
+                  <Dialog
+                    open={isPasswordDialogOpen}
+                    onOpenChange={setIsPasswordDialogOpen}
+                  >
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full sm:w-auto justify-start"
+                        aria-label="Change password"
+                      >
+                        <Key className="mr-2 h-4 w-4" />
+                        Change Password
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-[95vw] sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle className="text-lg">
+                          Change Password
+                        </DialogTitle>
+                      </DialogHeader>
+                      <form
+                        onSubmit={handlePasswordUpdate}
+                        className="space-y-4"
+                      >
+                        <div className="space-y-2">
+                          <Label htmlFor="currentPassword">
+                            Current Password
+                          </Label>
+                          <Input
+                            id="currentPassword"
+                            type="password"
+                            value={passwordData.currentPassword}
+                            onChange={(e) =>
+                              setPasswordData((prev) => ({
+                                ...prev,
+                                currentPassword: e.target.value,
+                              }))
+                            }
+                            required
+                            aria-required="true"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="newPassword">New Password</Label>
+                          <Input
+                            id="newPassword"
+                            type="password"
+                            value={passwordData.newPassword}
+                            onChange={(e) => {
+                              setPasswordData((prev) => ({
+                                ...prev,
+                                newPassword: e.target.value,
+                              }));
+                              setPasswordError("");
+                            }}
+                            required
+                            aria-required="true"
+                            aria-invalid={!!passwordError}
+                            aria-describedby="passwordError"
+                            className={passwordError ? "border-red-500" : ""}
+                          />
+                          {passwordError && (
+                            <p
+                              id="passwordError"
+                              className="text-sm text-red-600"
+                              role="alert"
+                              aria-live="assertive"
+                            >
+                              {passwordError}
+                            </p>
+                          )}
+                        </div>
+                        <Button
+                          type="submit"
+                          className="w-full"
+                          disabled={updateProfileMutation.isPending}
+                          aria-disabled={updateProfileMutation.isPending}
+                        >
+                          {updateProfileMutation.isPending
+                            ? "Updating..."
+                            : "Update Password"}
+                        </Button>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
             </div>
-          </div>
-          <div className="flex gap-4">
-            <Dialog open={isNameDialogOpen} onOpenChange={setIsNameDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="mt-6" variant="outline">
-                  <User className="mr-2 h-4 w-4" />
-                  Change Name
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Change Name</DialogTitle>
-                </DialogHeader>
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    if (formData.name !== userData.username) {
-                      updateProfileMutation.mutate({ name: formData.name });
-                    } else {
-                      toast({
-                        title: "No Changes",
-                        description: "The name is the same as the current name",
-                        variant: "destructive",
-                      });
-                    }
-                  }}
-                  className="space-y-4 pt-4"
-                >
-                  <div>
-                    <label className="text-sm font-medium">New Name</label>
-                    <Input
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          name: e.target.value,
-                        }))
-                      }
-                      className="mt-1"
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={updateProfileMutation.isPending}
-                  >
-                    {updateProfileMutation.isPending
-                      ? "Updating..."
-                      : "Update Name"}
-                  </Button>
-                </form>
-              </DialogContent>
-            </Dialog>
-
-            <Dialog
-              open={isPasswordDialogOpen}
-              onOpenChange={setIsPasswordDialogOpen}
-            >
-              <DialogTrigger asChild>
-                <Button className="mt-6" variant="outline">
-                  <Key className="mr-2 h-4 w-4" />
-                  Change Password
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Change Password</DialogTitle>
-                </DialogHeader>
-                <form
-                  onSubmit={handlePasswordUpdate}
-                  className="space-y-4 pt-4"
-                >
-                  <div>
-                    <label className="text-sm font-medium">
-                      Current Password
-                    </label>
-                    <Input
-                      type="password"
-                      value={passwordData.currentPassword}
-                      onChange={(e) =>
-                        setPasswordData((prev) => ({
-                          ...prev,
-                          currentPassword: e.target.value,
-                        }))
-                      }
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">New Password</label>
-                    <Input
-                      type="password"
-                      value={passwordData.newPassword}
-                      onChange={(e) => {
-                        setPasswordData((prev) => ({
-                          ...prev,
-                          newPassword: e.target.value,
-                        }));
-                        // Clear error when user starts typing
-                        setPasswordError("");
-                      }}
-                      className={`mt-1 ${
-                        passwordError ? "border-red-500" : ""
-                      }`}
-                    />
-                    {passwordError && (
-                      <p className="text-sm text-red-500 mt-1">
-                        {passwordError}
-                      </p>
-                    )}
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={updateProfileMutation.isPending}
-                  >
-                    {updateProfileMutation.isPending
-                      ? "Updating..."
-                      : "Update Password"}
-                  </Button>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+          </CardContent>
+        </Card>
+      </div>
+    </>
   );
 };
 

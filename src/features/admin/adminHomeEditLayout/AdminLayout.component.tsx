@@ -487,8 +487,8 @@ const ContentManagement = () => {
           content="Comprehensive content management interface for website administrators"
         />
       </Helmet>
-      <div className="container mx-auto p-4 md:p-6 space-y-6">
-        <header className="space-y-2">
+      <div className="w-full max-w-full overflow-hidden">
+        <header className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">
             Content Management
           </h1>
@@ -497,9 +497,9 @@ const ContentManagement = () => {
           </p>
         </header>
 
-        <div className="space-y-6 pb-8">
-          <Tabs defaultValue="navigation">
-            <TabsList className="flex py-4 px-1 m-2">
+        <div className="space-y-6">
+          <Tabs defaultValue="navigation" className="w-full">
+            <TabsList className="w-full flex whitespace-nowrap">
               {["navigation", "features", "statistics", "cta", "footer"].map(
                 (tab) => (
                   <TabsTrigger
@@ -512,582 +512,593 @@ const ContentManagement = () => {
                 )
               )}
             </TabsList>
-            {/* Navigation Tab */}
-            <TabsContent value="navigation">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Navigation Settings</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {validationErrors.length > 0 && (
-                      <div
-                        role="alert"
-                        className="text-red-600 text-sm bg-red-50 p-3 rounded-lg"
-                      >
-                        {validationErrors.map((error, index) => (
-                          <p key={index}>• {error}</p>
-                        ))}
-                      </div>
-                    )}
-                    {localContent.navItems?.map((item, index) => (
-                      <div
-                        key={index}
-                        className="flex flex-col md:flex-row gap-4 items-start md:items-center"
-                      >
-                        <div className="w-full md:flex-1 space-y-2">
-                          <Label htmlFor={`nav-label-${index}`}>Label</Label>
-                          <Input
-                            id={`nav-label-${index}`}
-                            placeholder="Menu Label"
-                            value={item.label}
-                            onChange={(e) =>
-                              handleNavChange(index, "label", e.target.value)
-                            }
-                          />
-                        </div>
-                        <div className="w-full md:flex-1 space-y-2">
-                          <Label htmlFor={`nav-path-${index}`}>Path</Label>
-                          <Input
-                            id={`nav-path-${index}`}
-                            placeholder="/example-path"
-                            value={item.path}
-                            onChange={(e) =>
-                              handleNavChange(index, "path", e.target.value)
-                            }
-                          />
-                        </div>
-                        <div className="w-full md:w-auto space-y-2">
-                          <Label>Visibility</Label>
-                          <select
-                            value={item.visibility}
-                            onChange={(e) =>
-                              handleNavChange(
-                                index,
-                                "visibility",
-                                e.target.value
-                              )
-                            }
-                            className="w-full border rounded-md p-2 text-sm"
-                          >
-                            <option value="all">All Users</option>
-                            <option value="logged-in">Logged In Only</option>
-                            <option value="logged-out">Logged Out Only</option>
-                            <option value="admin">Admin Only</option>
-                          </select>
-                        </div>
-                        <Button
-                          variant="destructive"
-                          onClick={() =>
-                            handleDeleteRequest("nav", index, item.label)
-                          }
-                          className="mt-2 md:mt-0"
-                          aria-label={`Remove navigation item ${item.label}`}
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    ))}
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <Button
-                        onClick={() => {
-                          setLocalContent((prev) => ({
-                            ...prev,
-                            navItems: [
-                              ...(prev.navItems || []),
-                              { label: "", path: "", visibility: "all" },
-                            ],
-                          }));
-                        }}
-                      >
-                        Add Navigation Item
-                      </Button>
-                      <Button
-                        onClick={handleNavSubmit}
-                        className="bg-green-600 hover:bg-green-700"
-                      >
-                        Save Navigation
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Features Tab */}
-            <TabsContent value="features">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Features Section</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <Label>Section Title</Label>
-                      <Input
-                        placeholder="Why Choose Us?"
-                        value={localContent.featuresContent?.title || ""}
-                        onChange={(e) =>
-                          setLocalContent((prev) => ({
-                            ...prev,
-                            featuresContent: {
-                              ...prev.featuresContent,
-                              title: e.target.value,
-                            },
-                          }))
-                        }
-                      />
-                    </div>
-
-                    {/* Features List */}
+            <div className="overflow-x-auto">
+              {/* Navigation Tab */}
+              <TabsContent value="navigation">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">
+                      Navigation Settings
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
                     <div className="space-y-4">
-                      {localContent.featuresContent?.items?.map(
-                        (feature, index) => (
-                          <div
-                            key={index}
-                            className="space-y-4 p-4 border rounded-lg"
-                          >
-                            <div className="flex justify-between items-center">
-                              <h3 className="font-medium">
-                                Feature {index + 1}
-                              </h3>
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={() =>
-                                  handleDeleteRequest(
-                                    "feature",
-                                    index,
-                                    feature.title
-                                  )
-                                }
-                                aria-label={`Remove feature ${feature.title}`}
-                              >
-                                Remove
-                              </Button>
-                            </div>
-                            <div className="space-y-4">
-                              <div className="space-y-2">
-                                <Label>Title</Label>
-                                <Input
-                                  placeholder="Feature Title"
-                                  value={feature.title}
-                                  onChange={(e) => {
-                                    const newItems = [
-                                      ...(localContent.featuresContent?.items ||
-                                        []),
-                                    ];
-                                    newItems[index] = {
-                                      ...newItems[index],
-                                      title: e.target.value,
-                                    };
-                                    setLocalContent((prev) => ({
-                                      ...prev,
-                                      featuresContent: {
-                                        ...prev.featuresContent,
-                                        items: newItems,
-                                      },
-                                    }));
-                                  }}
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label>Description</Label>
-                                <Textarea
-                                  placeholder="Feature description..."
-                                  value={feature.description}
-                                  onChange={(e) => {
-                                    const newItems = [
-                                      ...(localContent.featuresContent?.items ||
-                                        []),
-                                    ];
-                                    newItems[index] = {
-                                      ...newItems[index],
-                                      description: e.target.value,
-                                    };
-                                    setLocalContent((prev) => ({
-                                      ...prev,
-                                      featuresContent: {
-                                        ...prev.featuresContent,
-                                        items: newItems,
-                                      },
-                                    }));
-                                  }}
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label>Icon</Label>
-                                <select
-                                  value={feature.icon}
-                                  onChange={(e) => {
-                                    const newItems = [
-                                      ...(localContent.featuresContent?.items ||
-                                        []),
-                                    ];
-                                    newItems[index] = {
-                                      ...newItems[index],
-                                      icon: e.target.value,
-                                    };
-                                    setLocalContent((prev) => ({
-                                      ...prev,
-                                      featuresContent: {
-                                        ...prev.featuresContent,
-                                        items: newItems,
-                                      },
-                                    }));
-                                  }}
-                                  className="w-full border rounded-md p-2 text-sm"
-                                >
-                                  <option value="CheckCircle">
-                                    Check Circle
-                                  </option>
-                                  <option value="Clock">Clock</option>
-                                  <option value="AlertTriangle">
-                                    Alert Triangle
-                                  </option>
-                                </select>
-                              </div>
-                            </div>
-                          </div>
-                        )
+                      {validationErrors.length > 0 && (
+                        <div
+                          role="alert"
+                          className="text-red-600 text-sm bg-red-50 p-3 rounded-lg"
+                        >
+                          {validationErrors.map((error, index) => (
+                            <p key={index}>• {error}</p>
+                          ))}
+                        </div>
                       )}
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <Button
-                        onClick={() => {
-                          setLocalContent((prev) => ({
-                            ...prev,
-                            featuresContent: {
-                              ...prev.featuresContent,
-                              items: [
-                                ...(prev.featuresContent?.items || []),
-                                {
-                                  title: "",
-                                  description: "",
-                                  icon: "CheckCircle",
-                                },
-                              ],
-                            },
-                          }));
-                        }}
-                      >
-                        Add Feature
-                      </Button>
-                      <Button
-                        onClick={handleFeaturesSubmit}
-                        className="bg-green-600 hover:bg-green-700"
-                      >
-                        Save Features
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Statistics Tab */}
-            <TabsContent value="statistics">
-              {/* Statistics Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Statistics Section</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {localContent.statisticsContent?.items?.map(
-                      (stat, index) => (
+                      {localContent.navItems?.map((item, index) => (
                         <div
                           key={index}
-                          className="space-y-2 p-4 border rounded-lg"
+                          className="flex flex-col md:flex-row gap-4 items-start md:items-center"
                         >
-                          <div className="flex justify-between items-center">
-                            <h4 className="font-medium">
-                              Statistic {index + 1}
-                            </h4>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() =>
-                                handleDeleteRequest(
-                                  "statistic",
+                          <div className="w-full md:flex-1 space-y-2">
+                            <Label htmlFor={`nav-label-${index}`}>Label</Label>
+                            <Input
+                              id={`nav-label-${index}`}
+                              placeholder="Menu Label"
+                              value={item.label}
+                              onChange={(e) =>
+                                handleNavChange(index, "label", e.target.value)
+                              }
+                            />
+                          </div>
+                          <div className="w-full md:flex-1 space-y-2">
+                            <Label htmlFor={`nav-path-${index}`}>Path</Label>
+                            <Input
+                              id={`nav-path-${index}`}
+                              placeholder="/example-path"
+                              value={item.path}
+                              onChange={(e) =>
+                                handleNavChange(index, "path", e.target.value)
+                              }
+                            />
+                          </div>
+                          <div className="w-full md:flex-1 space-y-2">
+                            <Label>Visibility</Label>
+                            <select
+                              value={item.visibility}
+                              onChange={(e) =>
+                                handleNavChange(
                                   index,
-                                  stat.label
+                                  "visibility",
+                                  e.target.value
                                 )
                               }
+                              className="w-full border rounded-md p-2 text-sm"
                             >
-                              Remove
-                            </Button>
+                              <option value="all">All Users</option>
+                              <option value="logged-in">Logged In Only</option>
+                              <option value="logged-out">
+                                Logged Out Only
+                              </option>
+                              <option value="admin">Admin Only</option>
+                            </select>
                           </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <Input
-                              placeholder="Value (e.g., 1000+)"
-                              value={stat.value}
-                              onChange={(e) => {
-                                const newItems = [
-                                  ...(localContent.statisticsContent?.items ||
-                                    []),
-                                ];
-                                newItems[index] = {
-                                  ...newItems[index],
-                                  value: e.target.value,
-                                };
-                                setLocalContent((prev) => ({
-                                  ...prev,
-                                  statisticsContent: { items: newItems },
-                                }));
-                              }}
-                            />
-                            <Input
-                              placeholder="Label"
-                              value={stat.label}
-                              onChange={(e) => {
-                                const newItems = [
-                                  ...(localContent.statisticsContent?.items ||
-                                    []),
-                                ];
-                                newItems[index] = {
-                                  ...newItems[index],
-                                  label: e.target.value,
-                                };
-                                setLocalContent((prev) => ({
-                                  ...prev,
-                                  statisticsContent: { items: newItems },
-                                }));
-                              }}
-                            />
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span>Color:</span>
-                            <Input
-                              type="color"
-                              value={stat.color}
-                              onChange={(e) => {
-                                const newItems = [
-                                  ...(localContent.statisticsContent?.items ||
-                                    []),
-                                ];
-                                newItems[index] = {
-                                  ...newItems[index],
-                                  color: e.target.value,
-                                };
-                                setLocalContent((prev) => ({
-                                  ...prev,
-                                  statisticsContent: { items: newItems },
-                                }));
-                              }}
-                              className="w-20 h-10"
-                            />
-                          </div>
-                        </div>
-                      )
-                    )}
-                    <Button
-                      onClick={() => {
-                        setLocalContent((prev) => ({
-                          ...prev,
-                          statisticsContent: {
-                            items: [
-                              ...(prev.statisticsContent?.items || []),
-                              { value: "", label: "", color: "#000000" },
-                            ],
-                          },
-                        }));
-                      }}
-                    >
-                      Add Statistic
-                    </Button>
-                    <Button onClick={handleStatisticsSubmit} className="m-2">
-                      Save Statistics
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* CTA Tab */}
-            <TabsContent value="cta">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Call to Action Section</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <Input
-                      placeholder="Title"
-                      value={localContent.ctaContent?.title || ""}
-                      onChange={(e) =>
-                        setLocalContent((prev) => ({
-                          ...prev,
-                          ctaContent: {
-                            ...prev.ctaContent,
-                            title: e.target.value,
-                          },
-                        }))
-                      }
-                    />
-                    <Textarea
-                      placeholder="Subtitle"
-                      value={localContent.ctaContent?.subtitle || ""}
-                      onChange={(e) =>
-                        setLocalContent((prev) => ({
-                          ...prev,
-                          ctaContent: {
-                            ...prev.ctaContent,
-                            subtitle: e.target.value,
-                          },
-                        }))
-                      }
-                    />
-                    <div className="grid grid-cols-2 gap-4">
-                      <Input
-                        placeholder="Button Text"
-                        value={localContent.ctaContent?.buttonText || ""}
-                        onChange={(e) =>
-                          setLocalContent((prev) => ({
-                            ...prev,
-                            ctaContent: {
-                              ...prev.ctaContent,
-                              buttonText: e.target.value,
-                            },
-                          }))
-                        }
-                      />
-                      <Input
-                        placeholder="Button Link"
-                        value={localContent.ctaContent?.buttonLink || ""}
-                        onChange={(e) =>
-                          setLocalContent((prev) => ({
-                            ...prev,
-                            ctaContent: {
-                              ...prev.ctaContent,
-                              buttonLink: e.target.value,
-                            },
-                          }))
-                        }
-                      />
-                    </div>
-                    <Button onClick={handleCtaSubmit} className="mt-4">
-                      Save CTA
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>{" "}
-            </TabsContent>
-
-            {/* Footer Tab */}
-            <TabsContent value="footer">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Footer</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <Input
-                      placeholder="Company Name"
-                      value={localContent.footerContent?.companyName || ""}
-                      onChange={(e) =>
-                        setLocalContent((prev) => ({
-                          ...prev,
-                          footerContent: {
-                            ...prev.footerContent,
-                            companyName: e.target.value,
-                          },
-                        }))
-                      }
-                    />
-                    <Textarea
-                      placeholder="Description"
-                      value={localContent.footerContent?.description || ""}
-                      onChange={(e) =>
-                        setLocalContent((prev) => ({
-                          ...prev,
-                          footerContent: {
-                            ...prev.footerContent,
-                            description: e.target.value,
-                          },
-                        }))
-                      }
-                    />
-                    <div className="space-y-2">
-                      <h3 className="text-sm font-medium">Footer Links</h3>
-                      {localContent.footerContent?.links?.map((link, index) => (
-                        <div key={index} className="flex gap-4">
-                          <Input
-                            placeholder="Label"
-                            value={link.label}
-                            onChange={(e) => {
-                              const newLinks = [
-                                ...(localContent.footerContent?.links || []),
-                              ];
-                              newLinks[index] = {
-                                ...newLinks[index],
-                                label: e.target.value,
-                              };
-                              setLocalContent((prev) => ({
-                                ...prev,
-                                footerContent: {
-                                  ...prev.footerContent,
-                                  links: newLinks,
-                                },
-                              }));
-                            }}
-                          />
-                          <Input
-                            placeholder="Path"
-                            value={link.path}
-                            onChange={(e) => {
-                              const newLinks = [
-                                ...(localContent.footerContent?.links || []),
-                              ];
-                              newLinks[index] = {
-                                ...newLinks[index],
-                                path: e.target.value,
-                              };
-                              setLocalContent((prev) => ({
-                                ...prev,
-                                footerContent: {
-                                  ...prev.footerContent,
-                                  links: newLinks,
-                                },
-                              }));
-                            }}
-                          />
                           <Button
                             variant="destructive"
                             onClick={() =>
-                              handleDeleteRequest("footer", index, link.label)
+                              handleDeleteRequest("nav", index, item.label)
                             }
+                            className="mt-7"
+                            aria-label={`Remove navigation item ${item.label}`}
                           >
                             Remove
                           </Button>
                         </div>
                       ))}
+                      <div className="flex flex-col sm:flex-row gap-2 ">
+                        <Button
+                          onClick={() => {
+                            setLocalContent((prev) => ({
+                              ...prev,
+                              navItems: [
+                                ...(prev.navItems || []),
+                                { label: "", path: "", visibility: "all" },
+                              ],
+                            }));
+                          }}
+                        >
+                          Add Navigation Item
+                        </Button>
+                        <Button onClick={handleNavSubmit}>
+                          Save Navigation
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Features Tab */}
+              <TabsContent value="features">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Features Section</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <Label>Section Title</Label>
+                        <Input
+                          placeholder="Why Choose Us?"
+                          value={localContent.featuresContent?.title || ""}
+                          onChange={(e) =>
+                            setLocalContent((prev) => ({
+                              ...prev,
+                              featuresContent: {
+                                ...prev.featuresContent,
+                                title: e.target.value,
+                              },
+                            }))
+                          }
+                        />
+                      </div>
+
+                      {/* Features List */}
+                      <div className="space-y-4">
+                        {localContent.featuresContent?.items?.map(
+                          (feature, index) => (
+                            <div
+                              key={index}
+                              className="space-y-4 p-4 border rounded-lg"
+                            >
+                              <div className="flex justify-between items-center">
+                                <h3 className="font-medium">
+                                  Feature {index + 1}
+                                </h3>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleDeleteRequest(
+                                      "feature",
+                                      index,
+                                      feature.title
+                                    )
+                                  }
+                                  aria-label={`Remove feature ${feature.title}`}
+                                >
+                                  Remove
+                                </Button>
+                              </div>
+                              <div className="space-y-4">
+                                <div className="space-y-2">
+                                  <Label>Title</Label>
+                                  <Input
+                                    placeholder="Feature Title"
+                                    value={feature.title}
+                                    onChange={(e) => {
+                                      const newItems = [
+                                        ...(localContent.featuresContent
+                                          ?.items || []),
+                                      ];
+                                      newItems[index] = {
+                                        ...newItems[index],
+                                        title: e.target.value,
+                                      };
+                                      setLocalContent((prev) => ({
+                                        ...prev,
+                                        featuresContent: {
+                                          ...prev.featuresContent,
+                                          items: newItems,
+                                        },
+                                      }));
+                                    }}
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label>Description</Label>
+                                  <Textarea
+                                    placeholder="Feature description..."
+                                    value={feature.description}
+                                    onChange={(e) => {
+                                      const newItems = [
+                                        ...(localContent.featuresContent
+                                          ?.items || []),
+                                      ];
+                                      newItems[index] = {
+                                        ...newItems[index],
+                                        description: e.target.value,
+                                      };
+                                      setLocalContent((prev) => ({
+                                        ...prev,
+                                        featuresContent: {
+                                          ...prev.featuresContent,
+                                          items: newItems,
+                                        },
+                                      }));
+                                    }}
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label>Icon</Label>
+                                  <select
+                                    value={feature.icon}
+                                    onChange={(e) => {
+                                      const newItems = [
+                                        ...(localContent.featuresContent
+                                          ?.items || []),
+                                      ];
+                                      newItems[index] = {
+                                        ...newItems[index],
+                                        icon: e.target.value,
+                                      };
+                                      setLocalContent((prev) => ({
+                                        ...prev,
+                                        featuresContent: {
+                                          ...prev.featuresContent,
+                                          items: newItems,
+                                        },
+                                      }));
+                                    }}
+                                    className="w-full border rounded-md p-2 text-sm"
+                                  >
+                                    <option value="CheckCircle">
+                                      Check Circle
+                                    </option>
+                                    <option value="Clock">Clock</option>
+                                    <option value="AlertTriangle">
+                                      Alert Triangle
+                                    </option>
+                                  </select>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        )}
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <Button
+                          onClick={() => {
+                            setLocalContent((prev) => ({
+                              ...prev,
+                              featuresContent: {
+                                ...prev.featuresContent,
+                                items: [
+                                  ...(prev.featuresContent?.items || []),
+                                  {
+                                    title: "",
+                                    description: "",
+                                    icon: "CheckCircle",
+                                  },
+                                ],
+                              },
+                            }));
+                          }}
+                        >
+                          Add Feature
+                        </Button>
+                        <Button
+                          onClick={handleFeaturesSubmit}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          Save Features
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Statistics Tab */}
+              <TabsContent value="statistics">
+                {/* Statistics Section */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Statistics Section</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {localContent.statisticsContent?.items?.map(
+                        (stat, index) => (
+                          <div
+                            key={index}
+                            className="space-y-2 p-4 border rounded-lg"
+                          >
+                            <div className="flex justify-between items-center">
+                              <h4 className="font-medium">
+                                Statistic {index + 1}
+                              </h4>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() =>
+                                  handleDeleteRequest(
+                                    "statistic",
+                                    index,
+                                    stat.label
+                                  )
+                                }
+                              >
+                                Remove
+                              </Button>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <Input
+                                placeholder="Value (e.g., 1000+)"
+                                value={stat.value}
+                                onChange={(e) => {
+                                  const newItems = [
+                                    ...(localContent.statisticsContent?.items ||
+                                      []),
+                                  ];
+                                  newItems[index] = {
+                                    ...newItems[index],
+                                    value: e.target.value,
+                                  };
+                                  setLocalContent((prev) => ({
+                                    ...prev,
+                                    statisticsContent: { items: newItems },
+                                  }));
+                                }}
+                              />
+                              <Input
+                                placeholder="Label"
+                                value={stat.label}
+                                onChange={(e) => {
+                                  const newItems = [
+                                    ...(localContent.statisticsContent?.items ||
+                                      []),
+                                  ];
+                                  newItems[index] = {
+                                    ...newItems[index],
+                                    label: e.target.value,
+                                  };
+                                  setLocalContent((prev) => ({
+                                    ...prev,
+                                    statisticsContent: { items: newItems },
+                                  }));
+                                }}
+                              />
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span>Color:</span>
+                              <Input
+                                type="color"
+                                value={stat.color}
+                                onChange={(e) => {
+                                  const newItems = [
+                                    ...(localContent.statisticsContent?.items ||
+                                      []),
+                                  ];
+                                  newItems[index] = {
+                                    ...newItems[index],
+                                    color: e.target.value,
+                                  };
+                                  setLocalContent((prev) => ({
+                                    ...prev,
+                                    statisticsContent: { items: newItems },
+                                  }));
+                                }}
+                                className="w-20 h-10"
+                              />
+                            </div>
+                          </div>
+                        )
+                      )}
                       <Button
-                        className="mt-6"
                         onClick={() => {
                           setLocalContent((prev) => ({
                             ...prev,
-                            footerContent: {
-                              ...prev.footerContent,
-                              links: [
-                                ...(prev.footerContent?.links || []),
-                                { label: "", path: "", visibility: "all" },
+                            statisticsContent: {
+                              items: [
+                                ...(prev.statisticsContent?.items || []),
+                                { value: "", label: "", color: "#000000" },
                               ],
                             },
                           }));
                         }}
                       >
-                        Add Footer Link
+                        Add Statistic
+                      </Button>
+                      <Button onClick={handleStatisticsSubmit} className="m-2">
+                        Save Statistics
                       </Button>
                     </div>
-                    <Button onClick={handleFooterSubmit} className="mt-4">
-                      Save Footer
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* CTA Tab */}
+              <TabsContent value="cta">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Call to Action Section</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <Input
+                        placeholder="Title"
+                        value={localContent.ctaContent?.title || ""}
+                        onChange={(e) =>
+                          setLocalContent((prev) => ({
+                            ...prev,
+                            ctaContent: {
+                              ...prev.ctaContent,
+                              title: e.target.value,
+                            },
+                          }))
+                        }
+                      />
+                      <Textarea
+                        placeholder="Subtitle"
+                        value={localContent.ctaContent?.subtitle || ""}
+                        onChange={(e) =>
+                          setLocalContent((prev) => ({
+                            ...prev,
+                            ctaContent: {
+                              ...prev.ctaContent,
+                              subtitle: e.target.value,
+                            },
+                          }))
+                        }
+                      />
+                      <div className="grid grid-cols-2 gap-4">
+                        <Input
+                          placeholder="Button Text"
+                          value={localContent.ctaContent?.buttonText || ""}
+                          onChange={(e) =>
+                            setLocalContent((prev) => ({
+                              ...prev,
+                              ctaContent: {
+                                ...prev.ctaContent,
+                                buttonText: e.target.value,
+                              },
+                            }))
+                          }
+                        />
+                        <Input
+                          placeholder="Button Link"
+                          value={localContent.ctaContent?.buttonLink || ""}
+                          onChange={(e) =>
+                            setLocalContent((prev) => ({
+                              ...prev,
+                              ctaContent: {
+                                ...prev.ctaContent,
+                                buttonLink: e.target.value,
+                              },
+                            }))
+                          }
+                        />
+                      </div>
+                      <Button onClick={handleCtaSubmit} className="mt-4">
+                        Save CTA
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>{" "}
+              </TabsContent>
+
+              {/* Footer Tab */}
+              <TabsContent value="footer">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Footer</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <Input
+                        placeholder="Company Name"
+                        value={localContent.footerContent?.companyName || ""}
+                        onChange={(e) =>
+                          setLocalContent((prev) => ({
+                            ...prev,
+                            footerContent: {
+                              ...prev.footerContent,
+                              companyName: e.target.value,
+                            },
+                          }))
+                        }
+                      />
+                      <Textarea
+                        placeholder="Description"
+                        value={localContent.footerContent?.description || ""}
+                        onChange={(e) =>
+                          setLocalContent((prev) => ({
+                            ...prev,
+                            footerContent: {
+                              ...prev.footerContent,
+                              description: e.target.value,
+                            },
+                          }))
+                        }
+                      />
+                      <div className="space-y-2">
+                        <h3 className="text-sm font-medium">Footer Links</h3>
+                        {localContent.footerContent?.links?.map(
+                          (link, index) => (
+                            <div key={index} className="flex gap-4">
+                              <Input
+                                placeholder="Label"
+                                value={link.label}
+                                onChange={(e) => {
+                                  const newLinks = [
+                                    ...(localContent.footerContent?.links ||
+                                      []),
+                                  ];
+                                  newLinks[index] = {
+                                    ...newLinks[index],
+                                    label: e.target.value,
+                                  };
+                                  setLocalContent((prev) => ({
+                                    ...prev,
+                                    footerContent: {
+                                      ...prev.footerContent,
+                                      links: newLinks,
+                                    },
+                                  }));
+                                }}
+                              />
+                              <Input
+                                placeholder="Path"
+                                value={link.path}
+                                onChange={(e) => {
+                                  const newLinks = [
+                                    ...(localContent.footerContent?.links ||
+                                      []),
+                                  ];
+                                  newLinks[index] = {
+                                    ...newLinks[index],
+                                    path: e.target.value,
+                                  };
+                                  setLocalContent((prev) => ({
+                                    ...prev,
+                                    footerContent: {
+                                      ...prev.footerContent,
+                                      links: newLinks,
+                                    },
+                                  }));
+                                }}
+                              />
+                              <Button
+                                variant="destructive"
+                                onClick={() =>
+                                  handleDeleteRequest(
+                                    "footer",
+                                    index,
+                                    link.label
+                                  )
+                                }
+                              >
+                                Remove
+                              </Button>
+                            </div>
+                          )
+                        )}
+                        <Button
+                          className="mt-6"
+                          onClick={() => {
+                            setLocalContent((prev) => ({
+                              ...prev,
+                              footerContent: {
+                                ...prev.footerContent,
+                                links: [
+                                  ...(prev.footerContent?.links || []),
+                                  { label: "", path: "", visibility: "all" },
+                                ],
+                              },
+                            }));
+                          }}
+                        >
+                          Add Footer Link
+                        </Button>
+                      </div>
+                      <Button onClick={handleFooterSubmit} className="mt-4">
+                        Save Footer
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </div>
           </Tabs>
         </div>
 

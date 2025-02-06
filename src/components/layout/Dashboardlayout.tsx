@@ -19,21 +19,22 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Dashboard content */}
       <div className="flex-1 flex flex-col">
         <SidebarProvider open={open} onOpenChange={setOpen}>
-          <div className="flex flex-1">
+          <div className="flex flex-1 overflow-hidden">
             {/* Sidebar */}
             <div className="flex-shrink-0">
               <AppSidebar username={username} role={role} isOpen={open} />
             </div>
 
             {/* Main content area */}
-            <div className="flex-1 flex flex-col sticky top-0 z-50 backdrop-blur-sm">
-              {/* Breadcrumb - sticky */}
+            <div className="flex-1 flex flex-col w-full">
               <div className="sticky top-0 flex items-center gap-2 p-4 border-b bg-white z-10">
                 <SidebarTrigger />
                 <BreadcrumbComponent />
               </div>
               {/* Page content */}
-              <div className="flex-1 p-2">{children || <Outlet />}</div>
+              <div className="flex-1 overflow-y-auto p-4">
+                <div className="max-w-full">{children || <Outlet />}</div>
+              </div>
             </div>
           </div>
         </SidebarProvider>
