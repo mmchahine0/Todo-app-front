@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/persist/persist";
@@ -17,7 +17,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -50,6 +49,10 @@ interface DeleteConfirmState {
   pageId: string;
   pageTitle: string;
 }
+interface StatusMessage {
+  type: 'success' | 'error' | 'info';
+  message: string;
+}
 
 const PageCard = ({
   page,
@@ -65,31 +68,48 @@ const PageCard = ({
       <div className="flex justify-between items-start">
         <div>
           <h3 className="font-medium">{page.title}</h3>
-          <p className="text-sm text-gray-500 flex items-center gap-1">
-            {page.path} <ExternalLink className="h-3 w-3" />
+          <p 
+            className="text-sm text-gray-500 flex items-center gap-1"
+            aria-label={`Path: ${page.path}`}
+          >
+            {page.path} 
+            <ExternalLink className="h-3 w-3" aria-hidden="true" />
           </p>
         </div>
-        <div className="flex gap-2">
+        <div 
+          className="flex gap-2"
+          role="group"
+          aria-label={`Actions for ${page.title}`}
+        >
           <Button
             variant="outline"
             size="sm"
             onClick={() => onEdit(page)}
             aria-label={`Edit ${page.title}`}
+            className="focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
           >
-            <Pencil className="h-4 w-4" />
+            <Pencil className="h-4 w-4" aria-hidden="true" />
           </Button>
           <Button
             variant="destructive"
             size="sm"
             onClick={() => onDelete(page)}
             aria-label={`Delete ${page.title}`}
+            className="focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="h-4 w-4" aria-hidden="true" />
           </Button>
         </div>
       </div>
-      <div className="flex flex-wrap gap-2 text-sm">
-        <span className="px-2 py-1 rounded-full bg-gray-100">
+      <div 
+        className="flex flex-wrap gap-2 text-sm"
+        role="group"
+        aria-label="Page properties"
+      >
+        <span 
+          className="px-2 py-1 rounded-full bg-gray-100"
+          role="status"
+        >
           {page.layout}
         </span>
         <span
@@ -98,6 +118,7 @@ const PageCard = ({
               ? "bg-yellow-100 text-yellow-800"
               : "bg-green-100 text-green-800"
           }`}
+          role="status"
         >
           {page.isProtected ? "Protected" : "Public"}
         </span>
@@ -107,6 +128,7 @@ const PageCard = ({
               ? "bg-blue-100 text-blue-800"
               : "bg-gray-100 text-gray-800"
           }`}
+          role="status"
         >
           {page.isPublished ? "Published" : "Draft"}
         </span>
@@ -114,6 +136,74 @@ const PageCard = ({
     </div>
   </Card>
 );
+const CreatePageDialog = ({ 
+  isOpen, 
+  onClose, 
+  onSubmit 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void;
+  onSubmit: (data: CreatePageInput) => void;
+}) => {
+  const [formData, setFormData] = useState<CreatePageInput>({
+    title: "",
+    path: "",
+    content: {
+      layout: "base",
+      components: [],
+    },
+    isProtected: false,
+    admin: false,
+  });
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(formData);
+    setFormData({ 
+      title: "",
+      path: "",
+      content: {
+        layout: "base",
+        components: [],
+      },
+      isProtected: false,
+      admin: false,
+    });
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Create New Page</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="title" className="text-sm font-medium">Title</label>
+            <Input
+              id="title"
+              value={formData.title}
+              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              placeholder="Enter page title"
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="path" className="text-sm font-medium">Path</label>
+            <Input
+              id="path"
+              value={formData.path}
+              onChange={(e) => setFormData(prev => ({ ...prev, path: e.target.value }))}
+              placeholder="/dashboard/custom-page or /custom-page"
+              required
+            />
+          </div>
+          <Button type="submit" className="w-full">Create Page</Button>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const LayoutCreation = () => {
   const { toast } = useToast();
@@ -125,16 +215,8 @@ const LayoutCreation = () => {
     pageId: "",
     pageTitle: "",
   });
-  const [newPage, setNewPage] = useState<CreatePageInput>({
-    title: "",
-    path: "",
-    content: {
-      layout: "base",
-      components: [],
-    },
-    isProtected: false,
-    admin: false,
-  });
+
+  const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null);
 
   const accessToken = useSelector(
     (state: RootState) => state.auth?.accessToken
@@ -146,6 +228,29 @@ const LayoutCreation = () => {
     enabled: !!accessToken,
   });
 
+// Add keyboard shortcuts
+useEffect(() => {
+  const handleKeyboard = (e: KeyboardEvent) => {
+    // Alt + N for new page
+    if (e.altKey && e.key === 'n') {
+      e.preventDefault();
+      setIsCreateOpen(true);
+    }
+  };
+
+  window.addEventListener('keydown', handleKeyboard);
+  return () => window.removeEventListener('keydown', handleKeyboard);
+}, []);
+
+// Clear status message after announcement
+useEffect(() => {
+  if (statusMessage) {
+    const timer = setTimeout(() => setStatusMessage(null), 5000);
+    return () => clearTimeout(timer);
+  }
+}, [statusMessage]);
+
+
   const createMutation = useMutation({
     mutationFn: (data: CreatePageInput) => createPage(data, accessToken),
     onSuccess: () => {
@@ -155,16 +260,6 @@ const LayoutCreation = () => {
         description: "Page created successfully",
       });
       setIsCreateOpen(false);
-      setNewPage({
-        title: "",
-        path: "",
-        content: {
-          layout: "base",
-          components: [],
-        },
-        isProtected: false,
-        admin: false,
-      });
     },
     onError: () => {
       toast({
@@ -217,20 +312,17 @@ const LayoutCreation = () => {
     },
   });
 
-  const handleCreateSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const formattedPath = newPage.path.startsWith("/")
-      ? newPage.path
-      : `/${newPage.path}`;
-
+  const handleCreateSubmit = (data: CreatePageInput) => {
+    const formattedPath = data.path.startsWith("/") ? data.path : `/${data.path}`;
+  
     const pageData = {
-      ...newPage,
+      ...data,
       path: formattedPath,
-      layout: newPage.content.layout,
-      isProtected: newPage.isProtected,
-      admin: newPage.admin,
+      layout: data.content.layout,
+      isProtected: data.isProtected,
+      admin: data.admin,
     };
-
+  
     createMutation.mutate(pageData);
   };
   const getLayoutAndProtection = (
@@ -246,21 +338,9 @@ const LayoutCreation = () => {
     return { layout: "base", isProtected: false, admin: false };
   };
 
-  const handlePathChange = (path: string, isNewPage = true) => {
+  const handlePathChange = (path: string) => {
     const { layout, isProtected, admin } = getLayoutAndProtection(path);
-    if (isNewPage) {
-      setNewPage((prev) => ({
-        ...prev,
-        path,
-        layout,
-        isProtected,
-        admin,
-        content: {
-          ...prev.content,
-          layout,
-        },
-      }));
-    } else if (editingPage) {
+    if (editingPage) {
       setEditingPage({
         ...editingPage,
         path,
@@ -374,71 +454,85 @@ const LayoutCreation = () => {
   return (
     <>
       <Helmet>
-        <title>Layout Management | Admin</title>
-        <meta name="description" content="Manage page layouts and routing" />
+        <title>Layout Management | Admin Dashboard</title>
+        <meta name="description" content="Create and manage page layouts and routing in the admin dashboard" />
+        <meta name="robots" content="noindex, nofollow" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="canonical" href={window.location.href} />
       </Helmet>
-
-      <div className="w-full max-w-full overflow-hidden">
+  
+      {/* Screen reader announcements */}
+      <div className="sr-only" role="status" aria-live="polite">
+        {statusMessage?.message}
+      </div>
+  
+      <main 
+        className="w-full max-w-full overflow-hidden"
+        aria-labelledby="layout-management-title"
+      >
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <h1 className="text-2xl font-bold">Layout Management</h1>
-
-          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-            <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
-                <PlusCircle className="h-4 w-4" />
-                Create New Page
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Create New Page</DialogTitle>
-              </DialogHeader>
-              <FormContent
-                values={newPage}
-                onSubmit={handleCreateSubmit}
-                onChange={(field, value) =>
-                  setNewPage((prev) => ({ ...prev, [field]: value }))
-                }
-                onPathChange={(path) => handlePathChange(path)}
-                submitText="Create Page"
-              />
-            </DialogContent>
-          </Dialog>
+          <h1 
+            id="layout-management-title" 
+            className="text-2xl font-bold"
+            tabIndex={-1}
+          >
+            Layout Management
+            <span className="sr-only">Press Alt + N to create a new page</span>
+          </h1>
+  
+          <Button 
+            onClick={() => setIsCreateOpen(true)} 
+            className="flex items-center gap-2"
+            aria-label="Create new page"
+          >
+            <PlusCircle className="h-4 w-4" aria-hidden="true" />
+            Create New Page
+          </Button>
         </header>
-
+  
         {/* Desktop Table View */}
-        <div className="hidden lg:block overflow-x-auto">
+        <div 
+          className="hidden lg:block overflow-x-auto"
+          role="region" 
+          aria-label="Page layouts table"
+        >
           <div className="min-w-full border rounded-md">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[200px]">Title</TableHead>
-                  <TableHead className="w-[250px]">Path</TableHead>
-                  <TableHead className="w-[250px]">Layout</TableHead>
-                  <TableHead className="w-[250px]">Protected</TableHead>
-                  <TableHead className="w-[250px]">Status</TableHead>
-                  <TableHead className="w-[250px]">Actions</TableHead>
+                  <TableHead className="w-[200px]" scope="col">Title</TableHead>
+                  <TableHead className="w-[250px]" scope="col">Path</TableHead>
+                  <TableHead className="w-[250px]" scope="col">Layout</TableHead>
+                  <TableHead className="w-[250px]" scope="col">Protected</TableHead>
+                  <TableHead className="w-[250px]" scope="col">Status</TableHead>
+                  <TableHead className="w-[250px]" scope="col">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {pagesLoading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
+                    <TableCell 
+                      colSpan={6} 
+                      className="h-24 text-center"
+                      role="status"
+                      aria-busy="true"
+                    >
                       <div className="flex justify-center">
                         <div
                           className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"
-                          role="status"
-                          aria-label="Loading pages"
+                          aria-hidden="true"
                         />
+                        <span className="sr-only">Loading pages...</span>
                       </div>
                     </TableCell>
                   </TableRow>
                 ) : (
                   pages?.data.map((page: DynamicPage) => (
-                    <TableRow key={page.id}>
-                      <TableCell className="font-medium">
-                        {page.title}
-                      </TableCell>
+                    <TableRow 
+                      key={page.id}
+                      aria-label={`Page: ${page.title}`}
+                    >
+                      <TableCell className="font-medium">{page.title}</TableCell>
                       <TableCell>{page.path}</TableCell>
                       <TableCell>{page.layout}</TableCell>
                       <TableCell>
@@ -448,6 +542,7 @@ const LayoutCreation = () => {
                               ? "bg-yellow-100 text-yellow-800"
                               : "bg-green-100 text-green-800"
                           }`}
+                          role="status"
                         >
                           {page.isProtected ? "Protected" : "Public"}
                         </span>
@@ -459,27 +554,34 @@ const LayoutCreation = () => {
                               ? "bg-blue-100 text-blue-800"
                               : "bg-gray-100 text-gray-800"
                           }`}
+                          role="status"
                         >
                           {page.isPublished ? "Published" : "Draft"}
                         </span>
                       </TableCell>
-                      <TableCell className="">
-                        <div className="flex gap-2">
+                      <TableCell>
+                        <div 
+                          className="flex gap-2"
+                          role="group"
+                          aria-label={`Actions for ${page.title}`}
+                        >
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleEdit(page)}
                             aria-label={`Edit ${page.title}`}
+                            className="focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                           >
-                            <Pencil className="h-4 w-4" />
+                            <Pencil className="h-4 w-4" aria-hidden="true" />
                           </Button>
                           <Button
                             variant="destructive"
                             size="sm"
                             onClick={() => handleDeleteRequest(page)}
                             aria-label={`Delete ${page.title}`}
+                            className="focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-4 w-4" aria-hidden="true" />
                           </Button>
                         </div>
                       </TableCell>
@@ -490,31 +592,48 @@ const LayoutCreation = () => {
             </Table>
           </div>
         </div>
-
+  
         {/* Mobile Card View */}
-        <div className="lg:hidden">
+        <div 
+          className="lg:hidden"
+          role="region" 
+          aria-label="Page layouts cards"
+        >
           {pagesLoading ? (
-            <div className="flex justify-center py-8">
+            <div 
+              className="flex justify-center py-8"
+              role="status"
+              aria-busy="true"
+            >
               <div
                 className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"
-                role="status"
-                aria-label="Loading pages"
+                aria-hidden="true"
               />
+              <span className="sr-only">Loading pages...</span>
             </div>
           ) : (
-            pages?.data.map((page: DynamicPage) => (
-              <PageCard
-                key={page.id}
-                page={page}
-                onEdit={handleEdit}
-                onDelete={handleDeleteRequest}
-              />
-            ))
+            <ul className="space-y-4" role="list">
+              {pages?.data.map((page: DynamicPage) => (
+                <li key={page.id} role="listitem">
+                  <PageCard page={page} onEdit={handleEdit} onDelete={handleDeleteRequest} />
+                </li>
+              ))}
+            </ul>
           )}
         </div>
-
-        {/* Edit Dialog */}
-        <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+  
+        {/* Dialogs */}
+        <CreatePageDialog
+          isOpen={isCreateOpen}
+          onClose={() => setIsCreateOpen(false)}
+          onSubmit={handleCreateSubmit}
+        />
+  
+        <Dialog 
+          open={isEditOpen} 
+          onOpenChange={setIsEditOpen}
+          aria-label="Edit page dialog"
+        >
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Edit Page</DialogTitle>
@@ -528,39 +647,39 @@ const LayoutCreation = () => {
                     prev ? { ...prev, [field]: value } : null
                   )
                 }
-                onPathChange={(path) => handlePathChange(path, false)}
+                onPathChange={(path) => handlePathChange(path)}
                 submitText="Update Page"
               />
             )}
           </DialogContent>
         </Dialog>
-
-        {/* Delete Confirmation Dialog */}
+  
         <AlertDialog
           open={deleteConfirm.isOpen}
           onOpenChange={(isOpen) =>
             setDeleteConfirm((prev) => ({ ...prev, isOpen }))
           }
         >
-          <AlertDialogContent>
+          <AlertDialogContent role="alertdialog">
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Page</AlertDialogTitle>
               <AlertDialogDescription>
                 Are you sure you want to delete{" "}
-                <strong>{deleteConfirm.pageTitle}</strong>? This will also
-                delete all items attached to this page (e.g. Navigation items,
-                Footer Links). This action cannot be undone.
+                <strong>{deleteConfirm.pageTitle}</strong>?
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="sm:space-x-2">
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteConfirm}>
+              <AlertDialogAction 
+                onClick={handleDeleteConfirm}
+                aria-label={`Confirm deletion of ${deleteConfirm.pageTitle}`}
+              >
                 Delete
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </div>
+      </main>
     </>
   );
 };

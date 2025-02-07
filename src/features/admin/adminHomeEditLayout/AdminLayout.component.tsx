@@ -21,11 +21,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   NavItem,
+  HeroContent,
   FooterContent,
   FeaturesContent,
   StatisticsContent,
   CtaContent,
   DeleteConfirmState,
+  StatusMessage
 } from "./AdminLayout.types";
 import { useState, useEffect } from "react";
 import _ from "lodash";
@@ -35,7 +37,7 @@ import { Label } from "@/components/ui/label";
 
 const initialLocalContent = {
   navItems: [] as NavItem[],
-  heroContent: {} as any,
+  heroContent: {} as HeroContent,
   featuresContent: { title: "", items: [] } as FeaturesContent,
   statisticsContent: { items: [] } as StatisticsContent,
   ctaContent: {
@@ -51,6 +53,7 @@ const initialLocalContent = {
   } as FooterContent,
 };
 
+
 const ContentManagement = () => {
   const { toast } = useToast();
   const accessToken = useSelector((state: RootState) => state.auth.accessToken);
@@ -63,6 +66,47 @@ const ContentManagement = () => {
   });
 
   const [localContent, setLocalContent] = useState(initialLocalContent);
+
+  const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null);
+  const [activeTab, setActiveTab] = useState("navigation");
+
+  
+  // Add keyboard shortcuts
+  useEffect(() => {
+    const handleKeyboard = (e: KeyboardEvent) => {
+      // Alt + N for new navigation item
+      if (e.altKey && e.key === 'n' && activeTab === "navigation") {
+        e.preventDefault();
+        setLocalContent((prev) => ({
+          ...prev,
+          navItems: [...(prev.navItems || []), { label: "", path: "", visibility: "all" }],
+        }));
+      }
+      // Alt + S to save current section
+      if (e.altKey && e.key === 's') {
+        e.preventDefault();
+        switch(activeTab) {
+          case "navigation": handleNavSubmit(); break;
+          case "hero": handleHeroSubmit(); break;
+          case "features": handleFeaturesSubmit(); break;
+          case "statistics": handleStatisticsSubmit(); break;
+          case "cta": handleCtaSubmit(); break;
+          case "footer": handleFooterSubmit(); break;
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyboard);
+    return () => window.removeEventListener('keydown', handleKeyboard);
+  }, [activeTab]);
+
+  // Clear status message after announcement
+  useEffect(() => {
+    if (statusMessage) {
+      const timer = setTimeout(() => setStatusMessage(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [statusMessage]);
 
   const { data, isLoading } = useQuery({
     queryKey: ["content", accessToken],
@@ -108,11 +152,15 @@ const ContentManagement = () => {
     }
   }, [data]);
 
-  const updateMutation = useMutation({
+   const updateMutation = useMutation({
     mutationFn: ({ section, content }: { section: string; content: any }) =>
       updateContent(section, content, accessToken),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["content"] });
+      setStatusMessage({
+        type: 'success',
+        message: 'Content updated successfully'
+      });
       toast({
         title: "Success",
         description: "Content updated successfully",
@@ -120,10 +168,14 @@ const ContentManagement = () => {
     },
     onError: (error: unknown) => {
       if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data?.message || "Failed to update content";
+        setStatusMessage({
+          type: 'error',
+          message: errorMessage
+        });
         toast({
           title: "Error",
-          description:
-            error.response?.data?.message || "Failed to update content",
+          description: errorMessage,
           variant: "destructive",
         });
       }
@@ -214,6 +266,16 @@ const ContentManagement = () => {
           ),
         }));
         break;
+        case "hero":
+        setLocalContent((prev) => ({
+          ...prev,
+          statisticsContent: {
+            items: (prev.statisticsContent?.items || []).filter(
+              (_, i) => i !== deleteConfirm.index
+            ),
+          },
+        }));
+        break;
       case "feature":
         setLocalContent((prev) => ({
           ...prev,
@@ -289,7 +351,49 @@ const ContentManagement = () => {
 
     return errors;
   };
-
+  const handleHeroSubmit = async () => {
+    if (!localContent?.heroContent) return;
+  
+    const heroErrors = [];
+    if (!localContent.heroContent.title?.trim())
+      heroErrors.push("Hero title is required");
+    if (!localContent.heroContent.subtitle?.trim())
+      heroErrors.push("Hero subtitle is required");
+    if (!localContent.heroContent.buttonText?.trim())
+      heroErrors.push("Button text is required");
+    if (!localContent.heroContent.buttonLink?.trim())
+      heroErrors.push("Button link is required");
+  
+    if (heroErrors.length > 0) {
+      setValidationErrors(heroErrors);
+      toast({
+        title: "Validation Error",
+        description: heroErrors[0],
+        variant: "destructive",
+      });
+      return;
+    }
+    setValidationErrors([]);
+  
+    if (!hasChanges(localContent.heroContent, data?.heroContent)) {
+      toast({
+        title: "Info",
+        description: "No changes detected in Hero Section",
+        variant: "destructive",
+      });
+      return;
+    }
+  
+    try {
+      await updateMutation.mutateAsync({
+        section: "hero",
+        content: localContent.heroContent,
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  
   const handleFeaturesSubmit = async () => {
     if (!localContent?.featuresContent) return;
 
@@ -452,15 +556,26 @@ const ContentManagement = () => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      <div
+        role="alert"
+        aria-busy="true"
+        className="fixed inset-0 bg-white/90 flex items-center justify-center backdrop-blur-sm"
+      >
+        <div
+          className="animate-spin rounded-full h-12 w-12 border-4 border-[#FFD65A] border-t-[#16C47F]"
+          aria-label="Loading content"
+        />
+        <span className="sr-only">Loading page content...</span>
       </div>
     );
   }
 
   if (!localContent) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
+      <div 
+        className="flex justify-center items-center min-h-screen"
+        role="alert"
+      >
         No content found
       </div>
     );
@@ -474,23 +589,26 @@ const ContentManagement = () => {
           name="description"
           content="Manage website content including navigation, features, statistics, CTAs, and footer settings for optimal user experience."
         />
-        <meta
-          name="keywords"
-          content="content management, website admin, SEO settings, accessibility"
-        />
-        <meta
-          property="og:title"
-          content="Content Management | Admin Dashboard"
-        />
-        <meta
-          property="og:description"
-          content="Comprehensive content management interface for website administrators"
-        />
+        <meta name="robots" content="noindex, nofollow" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="canonical" href={window.location.href} />
       </Helmet>
-      <div className="w-full max-w-full overflow-hidden">
-        <header className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">
+      <div className="sr-only" role="status" aria-live="polite">
+        {statusMessage?.message}
+      </div>
+
+      <main  className="w-full max-w-full overflow-hidden"
+        aria-labelledby="content-management-title">
+       <header className="mb-6">
+          <h1 
+            id="content-management-title" 
+            className="text-2xl font-bold text-gray-900"
+            tabIndex={-1}
+          >
             Content Management
+            <span className="sr-only">
+              Press Alt + S to save the current section. In navigation tab, press Alt + N to add a new item.
+            </span>
           </h1>
           <p className="text-gray-600 text-sm">
             Customize your website's content and appearance across all devices
@@ -498,20 +616,20 @@ const ContentManagement = () => {
         </header>
 
         <div className="space-y-6">
-          <Tabs defaultValue="navigation" className="w-full">
-            <TabsList className="w-full flex whitespace-nowrap">
-              {["navigation", "features", "statistics", "cta", "footer"].map(
-                (tab) => (
-                  <TabsTrigger
-                    key={tab}
-                    value={tab}
-                    className="px-4 py-2 text-sm capitalize"
-                  >
-                    {tab}
-                  </TabsTrigger>
-                )
-              )}
-            </TabsList>
+        <Tabs 
+  defaultValue="navigation" 
+  className="w-full"
+  onValueChange={setActiveTab}
+>
+<TabsList className="w-full flex whitespace-nowrap" aria-label="Content sections">
+  {["navigation", "hero", "features", "statistics", "cta", "footer"].map(
+    (tab) => (
+      <TabsTrigger key={tab} value={tab} className="px-4 py-2 text-sm capitalize">
+        {tab}
+      </TabsTrigger>
+    )
+  )}
+</TabsList>
             <div className="overflow-x-auto">
               {/* Navigation Tab */}
               <TabsContent value="navigation">
@@ -615,6 +733,81 @@ const ContentManagement = () => {
                   </CardContent>
                 </Card>
               </TabsContent>
+              {/* Hero section Tab */}
+              <TabsContent value="hero">
+  <Card>
+    <CardHeader>
+      <CardTitle className="text-lg">Hero Section</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label>Title</Label>
+          <Input
+            placeholder="Hero Title"
+            value={localContent.heroContent?.title || ""}
+            onChange={(e) =>
+              setLocalContent((prev) => ({
+                ...prev,
+                heroContent: {
+                  ...prev.heroContent,
+                  title: e.target.value,
+                },
+              }))
+            }
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Subtitle</Label>
+          <Textarea
+            placeholder="Hero Subtitle"
+            value={localContent.heroContent?.subtitle || ""}
+            onChange={(e) =>
+              setLocalContent((prev) => ({
+                ...prev,
+                heroContent: {
+                  ...prev.heroContent,
+                  subtitle: e.target.value,
+                },
+              }))
+            }
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            placeholder="Button Text"
+            value={localContent.heroContent?.buttonText || ""}
+            onChange={(e) =>
+              setLocalContent((prev) => ({
+                ...prev,
+                heroContent: {
+                  ...prev.heroContent,
+                  buttonText: e.target.value,
+                },
+              }))
+            }
+          />
+          <Input
+            placeholder="Button Link"
+            value={localContent.heroContent?.buttonLink || ""}
+            onChange={(e) =>
+              setLocalContent((prev) => ({
+                ...prev,
+                heroContent: {
+                  ...prev.heroContent,
+                  buttonLink: e.target.value,
+                },
+              }))
+            }
+          />
+        </div>
+        <Button onClick={handleHeroSubmit} className="mt-4">
+          Save Hero Section
+        </Button>
+      </div>
+    </CardContent>
+  </Card>
+</TabsContent>
 
               {/* Features Tab */}
               <TabsContent value="features">
@@ -956,7 +1149,7 @@ const ContentManagement = () => {
                           }
                         />
                         <Input
-                          placeholder="Button Link"
+                          placeholder="Path"
                           value={localContent.ctaContent?.buttonLink || ""}
                           onChange={(e) =>
                             setLocalContent((prev) => ({
@@ -1108,7 +1301,7 @@ const ContentManagement = () => {
             setDeleteConfirm((prev) => ({ ...prev, isOpen }))
           }
         >
-          <AlertDialogContent>
+          <AlertDialogContent role="alertdialog">
             <AlertDialogHeader>
               <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
               <AlertDialogDescription>
@@ -1123,6 +1316,7 @@ const ContentManagement = () => {
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleDeleteConfirm}
+                aria-label={`Confirm deletion of ${deleteConfirm.itemLabel}`}
                 className="bg-red-600 hover:bg-red-700 text-white"
               >
                 Delete
@@ -1130,7 +1324,7 @@ const ContentManagement = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-      </div>
+      </main>
     </>
   );
 };

@@ -70,6 +70,7 @@ export const apiClient = async ({
             _initialized: true,
           })
         );
+        window.location.reload();
         return response.data;
       } catch (refreshError) {
         console.error("Refresh token error:", refreshError);

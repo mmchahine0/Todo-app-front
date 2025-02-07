@@ -26,8 +26,17 @@ const MainRouter: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-    );
+<div
+        role="alert"
+        aria-busy="true"
+        className="fixed inset-0 bg-white/90 flex items-center justify-center backdrop-blur-sm"
+      >
+        <div
+          className="animate-spin rounded-full h-12 w-12 border-4 border-[#FFD65A] border-t-[#16C47F]"
+          aria-label="Loading content"
+        />
+        <span className="sr-only">Loading page content...</span>
+      </div>    );
   }
 
   // For static routes

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { getContent } from "../admin/adminHomeEditLayout/AdminLayout.services";
@@ -16,12 +16,12 @@ const iconMap = {
 
 // Skip to main content component
 const SkipToMain = () => (
-  <a
-    href="#main-content"
+  <Link
+    to="#main-content"
     className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 bg-[#16C47F] text-white p-4 z-50 rounded-lg"
   >
     Skip to main content
-  </a>
+  </Link>
 );
 
 const Home: React.FC = () => {
@@ -37,13 +37,6 @@ const Home: React.FC = () => {
       } as Partial<SiteContent>),
   });
 
-  // Manage focus when content loads
-  useEffect(() => {
-    if (!isLoading && contentResponse) {
-      const mainContent = document.getElementById("main-content");
-      mainContent?.focus();
-    }
-  }, [isLoading, contentResponse]);
 
   if (
     isLoading ||

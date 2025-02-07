@@ -9,7 +9,7 @@ import {
   HousePlus,
   LogOut,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import * as sidebar from "@/components/ui/sidebar";
 import * as dropdown from "@/components/ui/dropdown-menu";
 import { AppSidebarProps } from "./Sidebar.types";
@@ -77,7 +77,12 @@ const adminItems = [
 export function AppSidebar({ username, role, isOpen }: AppSidebarProps) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
 
+  const isActive = (url: string) => {
+    return location.pathname === url;
+  };
+  
   const handleSignOut = useCallback(async () => {
     try {
       await queryClient.clear();
@@ -144,15 +149,26 @@ export function AppSidebar({ username, role, isOpen }: AppSidebarProps) {
                     >
                       <Link
                         to={item.url}
-                        className="flex items-center gap-3 w-full hover:bg-[#FFD65A]/10 p-2 rounded-lg
-                                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD65A]"
+                        className={`flex items-center gap-3 w-full p-2 rounded-lg
+                                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD65A]
+                                 ${isActive(item.url) 
+                                   ? 'bg-orange-500/10 text-orange-700' 
+                                   : 'hover:bg-[#FFD65A]/10'}`}
                         aria-label={item.description}
                       >
                         <item.icon
-                          className="w-5 h-5 text-[#16C47F]"
+                          className={`w-5 h-5 ${
+                            isActive(item.url) 
+                              ? 'text-orange-500' 
+                              : 'text-[#16C47F]'
+                          }`}
                           aria-hidden="true"
                         />
-                        <span className="font-medium text-gray-700">
+                        <span className={`font-medium ${
+                          isActive(item.url) 
+                            ? 'text-orange-700' 
+                            : 'text-gray-700'
+                        }`}>
                           {item.title}
                         </span>
                       </Link>

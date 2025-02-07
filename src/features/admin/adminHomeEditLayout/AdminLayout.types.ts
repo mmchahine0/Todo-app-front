@@ -74,7 +74,21 @@ export interface Props {
 
 export interface DeleteConfirmState {
   isOpen: boolean;
-  type: "nav" | "footer" | "feature" | "statistic" | null;
+  type: "nav" | "hero" | "footer" | "feature" | "statistic" | null;
   index: number;
   itemLabel: string;
+}
+
+export interface StatusMessage {
+  type: 'success' | 'error' | 'info';
+  message: string;
+}
+
+export interface LocalContentState {
+  navItems: NavItem[];
+  heroContent: HeroContent;
+  featuresContent: FeaturesContent;
+  statisticsContent: StatisticsContent;
+  ctaContent: CtaContent;
+  footerContent: FooterContent;
 }
