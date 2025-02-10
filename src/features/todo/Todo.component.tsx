@@ -1,3 +1,14 @@
+import { useRef, useCallback, useState, useEffect } from "react";
+import { useSelector } from "react-redux";
+import { useToast } from "@/hooks/use-toast";
+import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+// import { Plus, Edit, Trash } from "lucide-react";
+// import { DialogForm } from "../../components/common/dialog form/DialogForm.component";
+// import { PageMeta } from "../../components/common/seo/Seo.component";
+import { LoadingSpinner } from "../../components/common/loading spinner/LoadingSpinner.component";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,17 +26,9 @@ import {
   updateTodo,
   deleteTodo,
 } from "./Todo.service";
-import { useRef, useCallback, useState, useEffect } from "react";
-import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/persist/persist";
-import { useToast } from "@/hooks/use-toast";
-import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "../../lib/queryClient";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
 import { Helmet } from "react-helmet-async";
-
 const ITEMS_PER_PAGE = 6;
 
 const TodoDashboard = () => {
@@ -436,21 +439,10 @@ const TodoDashboard = () => {
             ))}
           </div>
         </div>
-
+        
         {/* Todo List */}
         {isLoading ? (
-          <div
-            className="flex justify-center p-8"
-            role="status"
-            aria-busy="true"
-            aria-label="Loading todos"
-          >
-            <div
-              className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"
-              aria-hidden="true"
-            />
-            <span className="sr-only">Loading todos...</span>
-          </div>
+       <LoadingSpinner size="lg" label="Loading todos..." />
         ) : (
           <>
             <ul

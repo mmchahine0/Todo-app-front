@@ -43,6 +43,7 @@ import type {
 } from "../../dynamicPages/DynamicPages.types";
 import { queryClient } from "@/lib/queryClient";
 import { PlusCircle, Pencil, Trash2, ExternalLink } from "lucide-react";
+import { LoadingSpinner } from "@/components/common/loading spinner/LoadingSpinner.component";
 
 interface DeleteConfirmState {
   isOpen: boolean;
@@ -517,13 +518,8 @@ useEffect(() => {
                       role="status"
                       aria-busy="true"
                     >
-                      <div className="flex justify-center">
-                        <div
-                          className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"
-                          aria-hidden="true"
-                        />
-                        <span className="sr-only">Loading pages...</span>
-                      </div>
+                             <LoadingSpinner size="lg" label="Loading pages..." />
+                      
                     </TableCell>
                   </TableRow>
                 ) : (

@@ -23,6 +23,7 @@ import {
 } from "../../utils/validationConstants";
 import { AxiosError } from "axios";
 import { Helmet } from "react-helmet-async";
+import { LoadingSpinner } from "@/components/common/loading spinner/LoadingSpinner.component";
 
 const RATE_LIMIT_CONFIG = {
   maxAttempts: 5,
@@ -373,12 +374,7 @@ const Signup: React.FC = () => {
                 aria-disabled={isLoading}
               >
                 {isLoading ? (
-                  <>
-                    <span className="sr-only">
-                      Creating account, please wait...
-                    </span>
-                    <span aria-hidden="true">Creating account...</span>
-                  </>
+                         <LoadingSpinner size="lg" label="Creating account..." />
                 ) : (
                   "Create account"
                 )}

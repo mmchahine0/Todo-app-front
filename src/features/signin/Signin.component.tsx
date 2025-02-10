@@ -25,6 +25,7 @@ import {
 } from "../../utils/validationConstants";
 import { Helmet } from "react-helmet-async";
 import axios from "axios";
+import { LoadingSpinner } from "@/components/common/loading spinner/LoadingSpinner.component";
 
 const RATE_LIMIT_CONFIG = {
   maxAttempts: 5,
@@ -313,10 +314,7 @@ const Signin = () => {
                 aria-disabled={isLoading}
               >
                 {isLoading ? (
-                  <>
-                    <span className="sr-only">Signing in, please wait...</span>
-                    <span aria-hidden="true">Signing in...</span>
-                  </>
+                         <LoadingSpinner size="lg" label="Signing in..." />
                 ) : (
                   "Sign in"
                 )}

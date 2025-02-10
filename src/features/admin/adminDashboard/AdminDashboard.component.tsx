@@ -39,6 +39,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Card } from "@/components/ui/card";
+import { LoadingSpinner } from "@/components/common/loading spinner/LoadingSpinner.component";
 
 interface ConfirmDialogState {
   isOpen: boolean;
@@ -408,17 +409,7 @@ const AdminDashboard = () => {
           aria-label="User management cards"
         >
           {isLoading ? (
-            <div 
-              className="flex justify-center py-8"
-              role="status"
-              aria-busy="true"
-            >
-              <div
-                className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"
-                aria-hidden="true"
-              />
-              <span className="sr-only">Loading users...</span>
-            </div>
+                   <LoadingSpinner size="lg" label="Loading users..." />
           ) : (
             <ul className="space-y-4" role="list">
               {data?.data.map((user: User) => (

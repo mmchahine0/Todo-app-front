@@ -6,6 +6,7 @@ import { ArrowRight, AlertTriangle, CheckCircle, Clock } from "lucide-react";
 import { SiteContent } from "../admin/adminHomeEditLayout/AdminLayout.types";
 import { Helmet } from "react-helmet-async";
 import home from "../../assets/home.png";
+import { LoadingSpinner } from "@/components/common/loading spinner/LoadingSpinner.component";
 
 const iconMap = {
   CheckCircle,
@@ -45,17 +46,7 @@ const Home: React.FC = () => {
     !contentResponse.statistics
   ) {
     return (
-      <div
-        role="alert"
-        aria-busy="true"
-        className="fixed inset-0 bg-white/90 flex items-center justify-center backdrop-blur-sm"
-      >
-        <div
-          className="animate-spin rounded-full h-12 w-12 border-4 border-[#FFD65A] border-t-[#16C47F]"
-          aria-label="Loading content"
-        />
-        <span className="sr-only">Loading page content...</span>
-      </div>
+             <LoadingSpinner size="lg" label="Loading Home..." />
     );
   }
 

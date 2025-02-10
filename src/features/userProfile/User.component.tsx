@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { User, Mail, Key } from "lucide-react";
 import axios from "axios";
+import { LoadingSpinner } from "@/components/common/loading spinner/LoadingSpinner.component";
 
 const UserProfile = () => {
   const dispatch = useDispatch();
@@ -120,18 +121,7 @@ const UserProfile = () => {
 
   if (isLoading) {
     return (
-      <div
-            className="flex justify-center p-8"
-            role="status"
-            aria-busy="true"
-            aria-label="Loading todos"
-          >
-            <div
-              className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"
-              aria-hidden="true"
-            />
-            <span className="sr-only">Loading user...</span>
-          </div>
+      <LoadingSpinner size="lg" label="Loading user info..." />
     );
   }
 
