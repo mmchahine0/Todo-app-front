@@ -23,7 +23,7 @@ export function AuthLayout({ children }: AuthlayoutProps) {
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar customLinks={data?.data?.navbar || []} />
-      <main className="flex-1">{children || <Outlet />}</main>
+      <main className="flex-1 flex">{children || <Outlet />}</main>
       <Footer content={data?.data?.footer || { links: [] }} />
     </div>
   );
