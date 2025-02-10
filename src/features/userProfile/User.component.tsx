@@ -120,13 +120,18 @@ const UserProfile = () => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-[calc(100vh-4rem)]">
-        <div
-          className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"
-          role="status"
-          aria-label="Loading..."
-        />
-      </div>
+      <div
+            className="flex justify-center p-8"
+            role="status"
+            aria-busy="true"
+            aria-label="Loading todos"
+          >
+            <div
+              className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"
+              aria-hidden="true"
+            />
+            <span className="sr-only">Loading user...</span>
+          </div>
     );
   }
 
