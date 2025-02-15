@@ -33,3 +33,14 @@ export interface APIError {
   };
   message: string;
 }
+
+export interface ConfirmDialogState {
+  isOpen: boolean;
+  userId: string;
+  userName: string;
+  action: "suspend" | "unsuspend" | null;
+}
+export interface StatusMessage {
+  type: "success" | "error" | "info";
+  message: string;
+}

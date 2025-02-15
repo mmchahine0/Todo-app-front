@@ -5,6 +5,8 @@ import {
   getAllUsers,
   updateUserRole,
   updateUserStatus,
+  ConfirmDialogState,
+  StatusMessage,
 } from "./AdminDashboard.services";
 import { User } from "./AdminDashboard.types";
 import { Helmet } from "react-helmet-async";
@@ -28,35 +30,17 @@ import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { queryClient } from "@/lib/queryClient";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Card } from "@/components/ui/card";
 import { LoadingSpinner } from "@/components/common/loading spinner/LoadingSpinner.component";
-
-interface ConfirmDialogState {
-  isOpen: boolean;
-  userId: string;
-  userName: string;
-  action: "suspend" | "unsuspend" | null;
-}
-interface StatusMessage {
-  type: 'success' | 'error' | 'info';
-  message: string;
-}
+import { ConfirmActionDialog } from "@/components/common/alert dialog form/ConfirmActionDialog.component";
 
 const AdminDashboard = () => {
   const { toast } = useToast();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null);
+  const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(
+    null
+  );
   const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState>({
     isOpen: false,
     userId: "",
@@ -87,21 +71,21 @@ const AdminDashboard = () => {
   useEffect(() => {
     const handleKeyboard = (e: KeyboardEvent) => {
       // Alt + P for previous page
-      if (e.altKey && e.key === 'p' && page > 1) {
+      if (e.altKey && e.key === "p" && page > 1) {
         e.preventDefault();
-        setPage(p => Math.max(1, p - 1));
+        setPage((p) => Math.max(1, p - 1));
       }
       // Alt + N for next page
-      if (e.altKey && e.key === 'n' && data?.pagination.nextPage) {
+      if (e.altKey && e.key === "n" && data?.pagination.nextPage) {
         e.preventDefault();
-        setPage(p => p + 1);
+        setPage((p) => p + 1);
       }
     };
 
-    window.addEventListener('keydown', handleKeyboard);
-    return () => window.removeEventListener('keydown', handleKeyboard);
+    window.addEventListener("keydown", handleKeyboard);
+    return () => window.removeEventListener("keydown", handleKeyboard);
   }, [page]);
-  
+
   const roleMutation = useMutation({
     mutationFn: ({
       userId,
@@ -113,8 +97,8 @@ const AdminDashboard = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       setStatusMessage({
-        type: 'success',
-        message: 'User role updated successfully'
+        type: "success",
+        message: "User role updated successfully",
       });
       toast({
         title: "Success",
@@ -123,8 +107,8 @@ const AdminDashboard = () => {
     },
     onError: () => {
       setStatusMessage({
-        type: 'error',
-        message: 'Failed to update user role'
+        type: "error",
+        message: "Failed to update user role",
       });
       toast({
         title: "Failed",
@@ -140,8 +124,8 @@ const AdminDashboard = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       setStatusMessage({
-        type: 'success',
-        message: 'User status updated successfully'
+        type: "success",
+        message: "User status updated successfully",
       });
       toast({
         title: "Success",
@@ -150,8 +134,8 @@ const AdminDashboard = () => {
     },
     onError: () => {
       setStatusMessage({
-        type: 'error',
-        message: 'Failed to update user status'
+        type: "error",
+        message: "Failed to update user status",
       });
       toast({
         title: "Failed",
@@ -185,21 +169,21 @@ const AdminDashboard = () => {
   // Responsive card view for mobile
   const UserCard = ({ user }: { user: User }) => (
     <Card className="p-4 mb-4">
-    <div className="space-y-3">
-      <div className="flex justify-between items-start">
-        <div>
-          <h3 className="font-medium">{user.name}</h3>
-          <p className="text-sm text-gray-500">{user.email}</p>
+      <div className="space-y-3">
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="font-medium">{user.name}</h3>
+            <p className="text-sm text-gray-500">{user.email}</p>
+          </div>
+          {id === user.id && (
+            <span
+              className="px-3 py-1 text-sm bg-gray-100 rounded-full"
+              aria-label="Current user"
+            >
+              You
+            </span>
+          )}
         </div>
-        {id === user.id && (
-          <span 
-            className="px-3 py-1 text-sm bg-gray-100 rounded-full"
-            aria-label="Current user"
-          >
-            You
-          </span>
-        )}
-      </div>
         <div className="flex justify-between items-center text-sm">
           <span className="text-gray-600">Role: {user.role}</span>
           <span
@@ -249,39 +233,40 @@ const AdminDashboard = () => {
     <>
       <Helmet>
         <title>User Management Dashboard | Admin Panel</title>
-        <meta 
-          name="description" 
-          content="Manage user accounts, roles, and permissions in the admin panel" 
+        <meta
+          name="description"
+          content="Manage user accounts, roles, and permissions in the admin panel"
         />
         <meta name="robots" content="noindex, nofollow" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="canonical" href={window.location.href} />
       </Helmet>
-  
+
       {/* Screen reader announcements */}
       <div className="sr-only" role="status" aria-live="polite">
         {statusMessage?.message}
       </div>
-  
-      <main className="w-full max-w-full overflow-hidden" aria-labelledby="dashboard-title">
+
+      <main
+        className="w-full max-w-full overflow-hidden"
+        aria-labelledby="dashboard-title"
+      >
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <h1 
-            id="dashboard-title" 
-            className="text-2xl font-bold"
-            tabIndex={-1}
-          >
+          <h1 id="dashboard-title" className="text-2xl font-bold" tabIndex={-1}>
             User Management
             <span className="sr-only">
               {`Showing page ${page} of ${totalPages}. Press Alt + P for previous page, Alt + N for next page.`}
             </span>
           </h1>
-  
-          <div 
+
+          <div
             className="flex items-center gap-2"
             role="toolbar"
             aria-label="Table controls"
           >
-            <span id="rows-per-page-label" className="text-sm text-gray-600">Show:</span>
+            <span id="rows-per-page-label" className="text-sm text-gray-600">
+              Show:
+            </span>
             <Select
               value={pageSize.toString()}
               onValueChange={(value) => {
@@ -303,29 +288,39 @@ const AdminDashboard = () => {
             </Select>
           </div>
         </header>
-  
+
         {/* Desktop Table View */}
-        <div 
-          className="hidden lg:block overflow-x-auto" 
-          role="region" 
+        <div
+          className="hidden lg:block overflow-x-auto"
+          role="region"
           aria-label="User management table"
         >
           <div className="min-w-full border rounded-md">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[200px]" scope="col">Name</TableHead>
-                  <TableHead className="w-[250px]" scope="col">Email</TableHead>
-                  <TableHead className="w-[250px]" scope="col">Role</TableHead>
-                  <TableHead className="w-[250px]" scope="col">Status</TableHead>
-                  <TableHead className="w-[250px]" scope="col">Actions</TableHead>
+                  <TableHead className="w-[200px]" scope="col">
+                    Name
+                  </TableHead>
+                  <TableHead className="w-[250px]" scope="col">
+                    Email
+                  </TableHead>
+                  <TableHead className="w-[250px]" scope="col">
+                    Role
+                  </TableHead>
+                  <TableHead className="w-[250px]" scope="col">
+                    Status
+                  </TableHead>
+                  <TableHead className="w-[250px]" scope="col">
+                    Actions
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell 
-                      colSpan={5} 
+                    <TableCell
+                      colSpan={5}
                       className="h-24 text-center"
                       role="status"
                       aria-busy="true"
@@ -341,10 +336,7 @@ const AdminDashboard = () => {
                   </TableRow>
                 ) : (
                   data?.data.map((user: User) => (
-                    <TableRow 
-                      key={user.id}
-                      aria-label={`User: ${user.name}`}
-                    >
+                    <TableRow key={user.id} aria-label={`User: ${user.name}`}>
                       <TableCell className="font-medium">{user.name}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>{user.role}</TableCell>
@@ -363,7 +355,7 @@ const AdminDashboard = () => {
                       </TableCell>
                       <TableCell>
                         {id === user.id ? (
-                          <span 
+                          <span
                             className="inline-flex px-3 py-1 bg-gray-100 rounded-full text-sm"
                             aria-label="Current user"
                           >
@@ -384,10 +376,14 @@ const AdminDashboard = () => {
                               />
                             </div>
                             <Button
-                              variant={user.suspended ? "default" : "destructive"}
+                              variant={
+                                user.suspended ? "default" : "destructive"
+                              }
                               onClick={() => handleStatusUpdate(user)}
                               className="whitespace-nowrap"
-                              aria-label={`${user.suspended ? "Unsuspend" : "Suspend"} ${user.name}`}
+                              aria-label={`${
+                                user.suspended ? "Unsuspend" : "Suspend"
+                              } ${user.name}`}
                             >
                               {user.suspended ? "Unsuspend" : "Suspend"}
                             </Button>
@@ -401,15 +397,15 @@ const AdminDashboard = () => {
             </Table>
           </div>
         </div>
-  
+
         {/* Mobile Card View */}
-        <div 
+        <div
           className="lg:hidden"
-          role="region" 
+          role="region"
           aria-label="User management cards"
         >
           {isLoading ? (
-                   <LoadingSpinner size="lg" label="Loading users..." />
+            <LoadingSpinner size="lg" label="Loading users..." />
           ) : (
             <ul className="space-y-4" role="list">
               {data?.data.map((user: User) => (
@@ -420,11 +416,11 @@ const AdminDashboard = () => {
             </ul>
           )}
         </div>
-  
+
         {/* Pagination */}
-        <nav 
+        <nav
           className="mt-4 flex flex-col items-center justify-between gap-4 py-4"
-          role="navigation" 
+          role="navigation"
           aria-label="Pagination navigation"
         >
           <div className="flex items-center gap-2">
@@ -433,12 +429,14 @@ const AdminDashboard = () => {
               size="sm"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              aria-label={`Go to previous page${page === 1 ? ' (disabled)' : ''}`}
+              aria-label={`Go to previous page${
+                page === 1 ? " (disabled)" : ""
+              }`}
               className="focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
             >
               Previous
             </Button>
-            <span 
+            <span
               className="text-sm text-gray-600"
               aria-live="polite"
               role="status"
@@ -450,13 +448,15 @@ const AdminDashboard = () => {
               size="sm"
               onClick={() => setPage((p) => p + 1)}
               disabled={!data?.pagination.nextPage}
-              aria-label={`Go to next page${!data?.pagination.nextPage ? ' (disabled)' : ''}`}
+              aria-label={`Go to next page${
+                !data?.pagination.nextPage ? " (disabled)" : ""
+              }`}
               className="focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
             >
               Next
             </Button>
           </div>
-          <div 
+          <div
             className="text-sm text-gray-500"
             aria-live="polite"
             role="status"
@@ -464,40 +464,27 @@ const AdminDashboard = () => {
             Total users: {data?.pagination.totalItems || 0}
           </div>
         </nav>
-  
+
         {/* Confirmation Dialog */}
-        <AlertDialog
-          open={confirmDialog.isOpen}
+        <ConfirmActionDialog
+          isOpen={confirmDialog.isOpen}
           onOpenChange={(isOpen) =>
             setConfirmDialog((prev) => ({ ...prev, isOpen }))
           }
-        >
-          <AlertDialogContent role="alertdialog">
-            <AlertDialogHeader>
-              <AlertDialogTitle>
-                {confirmDialog.action === "suspend"
-                  ? "Suspend User"
-                  : "Unsuspend User"}
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to{" "}
-                <span className="font-medium text-black">
-                  {confirmDialog.action} {confirmDialog.userName}
-                </span>
-                ? This action can be reversed later.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="sm:space-x-2">
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction 
-                onClick={handleConfirmStatusUpdate}
-                aria-label={`Confirm ${confirmDialog.action} for ${confirmDialog.userName}`}
-              >
-                Continue
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          onConfirm={handleConfirmStatusUpdate}
+          title={
+            confirmDialog.action === "suspend"
+              ? "Suspend User"
+              : "Unsuspend User"
+          }
+          description="Are you sure you want to"
+          itemDetails={{
+            name: confirmDialog.userName,
+            action: confirmDialog.action || "",
+          }}
+          confirmLabel="Continue"
+          cancelLabel="Cancel"
+        />
       </main>
     </>
   );

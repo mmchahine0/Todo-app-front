@@ -13,13 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { queryClient } from "../../lib/queryClient";
 import { validatePassword } from "../../utils/validationConstants";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { DialogForm } from "@/components/common/dialog form/DialogForm.component";
 import { User, Mail, Key } from "lucide-react";
 import axios from "axios";
 import { LoadingSpinner } from "@/components/common/loading spinner/LoadingSpinner.component";
@@ -85,6 +79,129 @@ const UserProfile = () => {
     },
   });
 
+  const renderNameChangeDialog = () => (
+    <DialogForm
+      title="Change Name"
+      triggerButton={{
+        icon: <User className="mr-2 h-4 w-4" />,
+        label: "Change Name",
+      }}
+      isOpen={isNameDialogOpen}
+      onOpenChange={setIsNameDialogOpen}
+    >
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (formData.name && formData.name.trim() === userData.username) {
+            toast({
+              title: "No Changes",
+              description: "The name matches your current name",
+              variant: "destructive",
+            });
+            return;
+          }
+          updateProfileMutation.mutate({ name: formData.name });
+        }}
+        className="space-y-4"
+      >
+        <div className="space-y-2">
+          <Label htmlFor="name">New Name</Label>
+          <Input
+            id="name"
+            type="text"
+            value={formData.name}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                name: e.target.value,
+              }))
+            }
+            required
+            minLength={2}
+            aria-required="true"
+          />
+        </div>
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={updateProfileMutation.isPending}
+          aria-disabled={updateProfileMutation.isPending}
+        >
+          {updateProfileMutation.isPending ? "Updating..." : "Update Name"}
+        </Button>
+      </form>
+    </DialogForm>
+  );
+
+  const renderPasswordChangeDialog = () => (
+    <DialogForm
+      title="Change Password"
+      triggerButton={{
+        icon: <Key className="mr-2 h-4 w-4" />,
+        label: "Change Password",
+      }}
+      isOpen={isPasswordDialogOpen}
+      onOpenChange={setIsPasswordDialogOpen}
+    >
+      <form onSubmit={handlePasswordUpdate} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="currentPassword">Current Password</Label>
+          <Input
+            id="currentPassword"
+            type="password"
+            value={passwordData.currentPassword}
+            onChange={(e) =>
+              setPasswordData((prev) => ({
+                ...prev,
+                currentPassword: e.target.value,
+              }))
+            }
+            required
+            aria-required="true"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="newPassword">New Password</Label>
+          <Input
+            id="newPassword"
+            type="password"
+            value={passwordData.newPassword}
+            onChange={(e) => {
+              setPasswordData((prev) => ({
+                ...prev,
+                newPassword: e.target.value,
+              }));
+              setPasswordError("");
+            }}
+            required
+            aria-required="true"
+            aria-invalid={!!passwordError}
+            aria-describedby="passwordError"
+            className={passwordError ? "border-red-500" : ""}
+          />
+          {passwordError && (
+            <p
+              id="passwordError"
+              className="text-sm text-red-600"
+              role="alert"
+              aria-live="assertive"
+            >
+              {passwordError}
+            </p>
+          )}
+        </div>
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={updateProfileMutation.isPending}
+          aria-disabled={updateProfileMutation.isPending}
+        >
+          {updateProfileMutation.isPending ? "Updating..." : "Update Password"}
+        </Button>
+      </form>
+    </DialogForm>
+  );
+
   const handlePasswordUpdate = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -120,9 +237,7 @@ const UserProfile = () => {
   };
 
   if (isLoading) {
-    return (
-      <LoadingSpinner size="lg" label="Loading user info..." />
-    );
+    return <LoadingSpinner size="lg" label="Loading user info..." />;
   }
 
   return (
@@ -191,160 +306,8 @@ const UserProfile = () => {
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-3">
-                  <Dialog
-                    open={isNameDialogOpen}
-                    onOpenChange={setIsNameDialogOpen}
-                  >
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full sm:w-auto justify-start"
-                        aria-label="Change name"
-                      >
-                        <User className="mr-2 h-4 w-4" />
-                        Change Name
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-[95vw] sm:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle className="text-lg">
-                          Change Name
-                        </DialogTitle>
-                      </DialogHeader>
-                      <form
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          if (
-                            formData.name &&
-                            formData.name.trim() === userData.username
-                          ) {
-                            toast({
-                              title: "No Changes",
-                              description: "The name matches your current name",
-                              variant: "destructive",
-                            });
-                            return;
-                          }
-                          updateProfileMutation.mutate({ name: formData.name });
-                        }}
-                        className="space-y-4"
-                      >
-                        <div className="space-y-2">
-                          <Label htmlFor="name">New Name</Label>
-                          <Input
-                            id="name"
-                            type="text"
-                            value={formData.name}
-                            onChange={(e) =>
-                              setFormData((prev) => ({
-                                ...prev,
-                                name: e.target.value,
-                              }))
-                            }
-                            required
-                            minLength={2}
-                            aria-required="true"
-                          />
-                        </div>
-                        <Button
-                          type="submit"
-                          className="w-full"
-                          disabled={updateProfileMutation.isPending}
-                          aria-disabled={updateProfileMutation.isPending}
-                        >
-                          {updateProfileMutation.isPending
-                            ? "Updating..."
-                            : "Update Name"}
-                        </Button>
-                      </form>
-                    </DialogContent>
-                  </Dialog>
-
-                  <Dialog
-                    open={isPasswordDialogOpen}
-                    onOpenChange={setIsPasswordDialogOpen}
-                  >
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full sm:w-auto justify-start"
-                        aria-label="Change password"
-                      >
-                        <Key className="mr-2 h-4 w-4" />
-                        Change Password
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-[95vw] sm:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle className="text-lg">
-                          Change Password
-                        </DialogTitle>
-                      </DialogHeader>
-                      <form
-                        onSubmit={handlePasswordUpdate}
-                        className="space-y-4"
-                      >
-                        <div className="space-y-2">
-                          <Label htmlFor="currentPassword">
-                            Current Password
-                          </Label>
-                          <Input
-                            id="currentPassword"
-                            type="password"
-                            value={passwordData.currentPassword}
-                            onChange={(e) =>
-                              setPasswordData((prev) => ({
-                                ...prev,
-                                currentPassword: e.target.value,
-                              }))
-                            }
-                            required
-                            aria-required="true"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="newPassword">New Password</Label>
-                          <Input
-                            id="newPassword"
-                            type="password"
-                            value={passwordData.newPassword}
-                            onChange={(e) => {
-                              setPasswordData((prev) => ({
-                                ...prev,
-                                newPassword: e.target.value,
-                              }));
-                              setPasswordError("");
-                            }}
-                            required
-                            aria-required="true"
-                            aria-invalid={!!passwordError}
-                            aria-describedby="passwordError"
-                            className={passwordError ? "border-red-500" : ""}
-                          />
-                          {passwordError && (
-                            <p
-                              id="passwordError"
-                              className="text-sm text-red-600"
-                              role="alert"
-                              aria-live="assertive"
-                            >
-                              {passwordError}
-                            </p>
-                          )}
-                        </div>
-                        <Button
-                          type="submit"
-                          className="w-full"
-                          disabled={updateProfileMutation.isPending}
-                          aria-disabled={updateProfileMutation.isPending}
-                        >
-                          {updateProfileMutation.isPending
-                            ? "Updating..."
-                            : "Update Password"}
-                        </Button>
-                      </form>
-                    </DialogContent>
-                  </Dialog>
+                  {renderNameChangeDialog()}
+                  {renderPasswordChangeDialog()}
                 </div>
               </div>
             </div>

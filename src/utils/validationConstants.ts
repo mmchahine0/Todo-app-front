@@ -102,3 +102,10 @@ export const validateName = (name: string): string => {
   }
   return "";
 };
+
+// validationConstants.ts
+export const validateOTP = (value: string): string => {
+  if (!value) return "Verification code is required";
+  if (!/^\d{6}$/.test(value)) return "Code must be 6 digits";
+  return "";
+};

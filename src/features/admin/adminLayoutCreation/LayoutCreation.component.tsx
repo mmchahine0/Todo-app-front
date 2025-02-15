@@ -18,16 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
@@ -44,6 +35,7 @@ import type {
 import { queryClient } from "@/lib/queryClient";
 import { PlusCircle, Pencil, Trash2, ExternalLink } from "lucide-react";
 import { LoadingSpinner } from "@/components/common/loading spinner/LoadingSpinner.component";
+import { DeleteAlertDialog } from "@/components/common/alert dialog form/DeleteAlertDialog.component";
 
 interface DeleteConfirmState {
   isOpen: boolean;
@@ -51,7 +43,7 @@ interface DeleteConfirmState {
   pageTitle: string;
 }
 interface StatusMessage {
-  type: 'success' | 'error' | 'info';
+  type: "success" | "error" | "info";
   message: string;
 }
 
@@ -69,15 +61,15 @@ const PageCard = ({
       <div className="flex justify-between items-start">
         <div>
           <h3 className="font-medium">{page.title}</h3>
-          <p 
+          <p
             className="text-sm text-gray-500 flex items-center gap-1"
             aria-label={`Path: ${page.path}`}
           >
-            {page.path} 
+            {page.path}
             <ExternalLink className="h-3 w-3" aria-hidden="true" />
           </p>
         </div>
-        <div 
+        <div
           className="flex gap-2"
           role="group"
           aria-label={`Actions for ${page.title}`}
@@ -102,15 +94,12 @@ const PageCard = ({
           </Button>
         </div>
       </div>
-      <div 
+      <div
         className="flex flex-wrap gap-2 text-sm"
         role="group"
         aria-label="Page properties"
       >
-        <span 
-          className="px-2 py-1 rounded-full bg-gray-100"
-          role="status"
-        >
+        <span className="px-2 py-1 rounded-full bg-gray-100" role="status">
           {page.layout}
         </span>
         <span
@@ -137,12 +126,12 @@ const PageCard = ({
     </div>
   </Card>
 );
-const CreatePageDialog = ({ 
-  isOpen, 
-  onClose, 
-  onSubmit 
-}: { 
-  isOpen: boolean; 
+const CreatePageDialog = ({
+  isOpen,
+  onClose,
+  onSubmit,
+}: {
+  isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: CreatePageInput) => void;
 }) => {
@@ -156,11 +145,11 @@ const CreatePageDialog = ({
     isProtected: false,
     admin: false,
   });
-  
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
-    setFormData({ 
+    setFormData({
       title: "",
       path: "",
       content: {
@@ -180,26 +169,36 @@ const CreatePageDialog = ({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <label htmlFor="title" className="text-sm font-medium">Title</label>
+            <label htmlFor="title" className="text-sm font-medium">
+              Title
+            </label>
             <Input
               id="title"
               value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, title: e.target.value }))
+              }
               placeholder="Enter page title"
               required
             />
           </div>
           <div className="space-y-2">
-            <label htmlFor="path" className="text-sm font-medium">Path</label>
+            <label htmlFor="path" className="text-sm font-medium">
+              Path
+            </label>
             <Input
               id="path"
               value={formData.path}
-              onChange={(e) => setFormData(prev => ({ ...prev, path: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, path: e.target.value }))
+              }
               placeholder="/dashboard/custom-page or /custom-page"
               required
             />
           </div>
-          <Button type="submit" className="w-full">Create Page</Button>
+          <Button type="submit" className="w-full">
+            Create Page
+          </Button>
         </form>
       </DialogContent>
     </Dialog>
@@ -217,7 +216,9 @@ const LayoutCreation = () => {
     pageTitle: "",
   });
 
-  const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(null);
+  const [statusMessage, setStatusMessage] = useState<StatusMessage | null>(
+    null
+  );
 
   const accessToken = useSelector(
     (state: RootState) => state.auth?.accessToken
@@ -229,28 +230,27 @@ const LayoutCreation = () => {
     enabled: !!accessToken,
   });
 
-// Add keyboard shortcuts
-useEffect(() => {
-  const handleKeyboard = (e: KeyboardEvent) => {
-    // Alt + N for new page
-    if (e.altKey && e.key === 'n') {
-      e.preventDefault();
-      setIsCreateOpen(true);
+  // Add keyboard shortcuts
+  useEffect(() => {
+    const handleKeyboard = (e: KeyboardEvent) => {
+      // Alt + N for new page
+      if (e.altKey && e.key === "n") {
+        e.preventDefault();
+        setIsCreateOpen(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyboard);
+    return () => window.removeEventListener("keydown", handleKeyboard);
+  }, []);
+
+  // Clear status message after announcement
+  useEffect(() => {
+    if (statusMessage) {
+      const timer = setTimeout(() => setStatusMessage(null), 5000);
+      return () => clearTimeout(timer);
     }
-  };
-
-  window.addEventListener('keydown', handleKeyboard);
-  return () => window.removeEventListener('keydown', handleKeyboard);
-}, []);
-
-// Clear status message after announcement
-useEffect(() => {
-  if (statusMessage) {
-    const timer = setTimeout(() => setStatusMessage(null), 5000);
-    return () => clearTimeout(timer);
-  }
-}, [statusMessage]);
-
+  }, [statusMessage]);
 
   const createMutation = useMutation({
     mutationFn: (data: CreatePageInput) => createPage(data, accessToken),
@@ -314,8 +314,10 @@ useEffect(() => {
   });
 
   const handleCreateSubmit = (data: CreatePageInput) => {
-    const formattedPath = data.path.startsWith("/") ? data.path : `/${data.path}`;
-  
+    const formattedPath = data.path.startsWith("/")
+      ? data.path
+      : `/${data.path}`;
+
     const pageData = {
       ...data,
       path: formattedPath,
@@ -323,7 +325,7 @@ useEffect(() => {
       isProtected: data.isProtected,
       admin: data.admin,
     };
-  
+
     createMutation.mutate(pageData);
   };
   const getLayoutAndProtection = (
@@ -456,33 +458,36 @@ useEffect(() => {
     <>
       <Helmet>
         <title>Layout Management | Admin Dashboard</title>
-        <meta name="description" content="Create and manage page layouts and routing in the admin dashboard" />
+        <meta
+          name="description"
+          content="Create and manage page layouts and routing in the admin dashboard"
+        />
         <meta name="robots" content="noindex, nofollow" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="canonical" href={window.location.href} />
       </Helmet>
-  
+
       {/* Screen reader announcements */}
       <div className="sr-only" role="status" aria-live="polite">
         {statusMessage?.message}
       </div>
-  
-      <main 
+
+      <main
         className="w-full max-w-full overflow-hidden"
         aria-labelledby="layout-management-title"
       >
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <h1 
-            id="layout-management-title" 
+          <h1
+            id="layout-management-title"
             className="text-2xl font-bold"
             tabIndex={-1}
           >
             Layout Management
             <span className="sr-only">Press Alt + N to create a new page</span>
           </h1>
-  
-          <Button 
-            onClick={() => setIsCreateOpen(true)} 
+
+          <Button
+            onClick={() => setIsCreateOpen(true)}
             className="flex items-center gap-2"
             aria-label="Create new page"
           >
@@ -490,45 +495,55 @@ useEffect(() => {
             Create New Page
           </Button>
         </header>
-  
+
         {/* Desktop Table View */}
-        <div 
+        <div
           className="hidden lg:block overflow-x-auto"
-          role="region" 
+          role="region"
           aria-label="Page layouts table"
         >
           <div className="min-w-full border rounded-md">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[200px]" scope="col">Title</TableHead>
-                  <TableHead className="w-[250px]" scope="col">Path</TableHead>
-                  <TableHead className="w-[250px]" scope="col">Layout</TableHead>
-                  <TableHead className="w-[250px]" scope="col">Protected</TableHead>
-                  <TableHead className="w-[250px]" scope="col">Status</TableHead>
-                  <TableHead className="w-[250px]" scope="col">Actions</TableHead>
+                  <TableHead className="w-[200px]" scope="col">
+                    Title
+                  </TableHead>
+                  <TableHead className="w-[250px]" scope="col">
+                    Path
+                  </TableHead>
+                  <TableHead className="w-[250px]" scope="col">
+                    Layout
+                  </TableHead>
+                  <TableHead className="w-[250px]" scope="col">
+                    Protected
+                  </TableHead>
+                  <TableHead className="w-[250px]" scope="col">
+                    Status
+                  </TableHead>
+                  <TableHead className="w-[250px]" scope="col">
+                    Actions
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {pagesLoading ? (
                   <TableRow>
-                    <TableCell 
-                      colSpan={6} 
+                    <TableCell
+                      colSpan={6}
                       className="h-24 text-center"
                       role="status"
                       aria-busy="true"
                     >
-                             <LoadingSpinner size="lg" label="Loading pages..." />
-                      
+                      <LoadingSpinner size="lg" label="Loading pages..." />
                     </TableCell>
                   </TableRow>
                 ) : (
                   pages?.data.map((page: DynamicPage) => (
-                    <TableRow 
-                      key={page.id}
-                      aria-label={`Page: ${page.title}`}
-                    >
-                      <TableCell className="font-medium">{page.title}</TableCell>
+                    <TableRow key={page.id} aria-label={`Page: ${page.title}`}>
+                      <TableCell className="font-medium">
+                        {page.title}
+                      </TableCell>
                       <TableCell>{page.path}</TableCell>
                       <TableCell>{page.layout}</TableCell>
                       <TableCell>
@@ -556,7 +571,7 @@ useEffect(() => {
                         </span>
                       </TableCell>
                       <TableCell>
-                        <div 
+                        <div
                           className="flex gap-2"
                           role="group"
                           aria-label={`Actions for ${page.title}`}
@@ -588,15 +603,15 @@ useEffect(() => {
             </Table>
           </div>
         </div>
-  
+
         {/* Mobile Card View */}
-        <div 
+        <div
           className="lg:hidden"
-          role="region" 
+          role="region"
           aria-label="Page layouts cards"
         >
           {pagesLoading ? (
-            <div 
+            <div
               className="flex justify-center py-8"
               role="status"
               aria-busy="true"
@@ -611,22 +626,26 @@ useEffect(() => {
             <ul className="space-y-4" role="list">
               {pages?.data.map((page: DynamicPage) => (
                 <li key={page.id} role="listitem">
-                  <PageCard page={page} onEdit={handleEdit} onDelete={handleDeleteRequest} />
+                  <PageCard
+                    page={page}
+                    onEdit={handleEdit}
+                    onDelete={handleDeleteRequest}
+                  />
                 </li>
               ))}
             </ul>
           )}
         </div>
-  
+
         {/* Dialogs */}
         <CreatePageDialog
           isOpen={isCreateOpen}
           onClose={() => setIsCreateOpen(false)}
           onSubmit={handleCreateSubmit}
         />
-  
-        <Dialog 
-          open={isEditOpen} 
+
+        <Dialog
+          open={isEditOpen}
           onOpenChange={setIsEditOpen}
           aria-label="Edit page dialog"
         >
@@ -649,32 +668,20 @@ useEffect(() => {
             )}
           </DialogContent>
         </Dialog>
-  
-        <AlertDialog
-          open={deleteConfirm.isOpen}
+
+        <DeleteAlertDialog
+          isOpen={deleteConfirm.isOpen}
           onOpenChange={(isOpen) =>
             setDeleteConfirm((prev) => ({ ...prev, isOpen }))
           }
-        >
-          <AlertDialogContent role="alertdialog">
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Page</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete{" "}
-                <strong>{deleteConfirm.pageTitle}</strong>?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="sm:space-x-2">
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction 
-                onClick={handleDeleteConfirm}
-                aria-label={`Confirm deletion of ${deleteConfirm.pageTitle}`}
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          onConfirm={handleDeleteConfirm}
+          title="Delete Page"
+          description="Are you sure you want to delete"
+          itemName={deleteConfirm.pageTitle}
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+          confirmVariant="destructive"
+        />
       </main>
     </>
   );

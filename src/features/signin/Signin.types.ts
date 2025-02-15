@@ -2,6 +2,9 @@ export interface LoginCredentials {
   email: string;
   password: string;
 }
+export interface ForgotPasswordCredentials {
+  email: string;
+}
 export interface UserResponse {
   statusCode: number;
   message: string;
@@ -12,5 +15,6 @@ export interface UserResponse {
     role: string;
     accessToken: string;
     refreshToken: string;
+    isEmailVerified: boolean;
   };
 }

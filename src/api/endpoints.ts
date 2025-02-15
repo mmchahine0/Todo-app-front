@@ -2,6 +2,10 @@ export const ENDPOINTS = {
   Auth: {
     Signin: "/auth/signin",
     Signup: "/auth/signup",
+    VerifyEmail: "/auth/verify-email",
+    ResendCode: "/auth/resend-code",
+    ForgotPassword: "/auth/forgot-password",
+    ResetPassword: "/auth/reset-password",
     RefreshToken: "/auth/refresh",
   },
   Todos: {
@@ -23,12 +27,13 @@ export const ENDPOINTS = {
       Update: (id: string) => `/admin/pages/${id}`,
       Delete: (id: string) => `/admin/pages/${id}`,
       GetRoutes: "/admin/routes",
-      Published: "/pages/published"
+      Published: "/pages/published",
     },
   },
   PageContent: {
     Get: (pageId: string) => `/api/pages/${pageId}/content`,
-    Update: (pageId: string, section: string) => `/api/admin/pages/${pageId}/content/${section}`,
+    Update: (pageId: string, section: string) =>
+      `/api/admin/pages/${pageId}/content/${section}`,
   },
   Content: {
     Get: "/content",

@@ -5,20 +5,7 @@ import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-// import { Plus, Edit, Trash } from "lucide-react";
-// import { DialogForm } from "../../components/common/dialog form/DialogForm.component";
-// import { PageMeta } from "../../components/common/seo/Seo.component";
 import { LoadingSpinner } from "../../components/common/loading spinner/LoadingSpinner.component";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import type { TodoInput, StatusMessage, DeleteDialogState } from "./Todo.types";
 import {
   getTodosByUserId,
@@ -29,6 +16,7 @@ import {
 import type { RootState } from "@/redux/persist/persist";
 import { queryClient } from "../../lib/queryClient";
 import { Helmet } from "react-helmet-async";
+import { DeleteAlertDialog } from "@/components/common/alert dialog form/DeleteAlertDialog.component";
 const ITEMS_PER_PAGE = 6;
 
 const TodoDashboard = () => {
@@ -439,10 +427,10 @@ const TodoDashboard = () => {
             ))}
           </div>
         </div>
-        
+
         {/* Todo List */}
         {isLoading ? (
-       <LoadingSpinner size="lg" label="Loading todos..." />
+          <LoadingSpinner size="lg" label="Loading todos..." />
         ) : (
           <>
             <ul
@@ -598,34 +586,19 @@ const TodoDashboard = () => {
           </>
         )}
       </main>
-      <AlertDialog
-        open={deleteDialog.isOpen}
+      <DeleteAlertDialog
+        isOpen={deleteDialog.isOpen}
         onOpenChange={(isOpen) =>
           setDeleteDialog((prev) => ({ ...prev, isOpen }))
         }
-      >
-        <AlertDialogContent className="sm:max-w-[425px]">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Todo</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete{" "}
-              <span className="font-medium text-black">
-                {deleteDialog.todoTitle}
-              </span>
-              ? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="sm:space-x-2">
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              className="bg-red-500 hover:bg-red-600 text-white font-semibold"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onConfirm={handleConfirmDelete}
+        title="Delete Todo"
+        description="Are you sure you want to delete"
+        itemName={deleteDialog.todoTitle}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        confirmVariant="destructive"
+      />
     </>
   );
 };

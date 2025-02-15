@@ -1,5 +1,5 @@
-import { store } from '../redux/persist/persist';
-import { setRateLimit, resetRateLimit } from '../redux/slices/ratelimiterSlice';
+import { store } from "../redux/persist/persist";
+import { setRateLimit, resetRateLimit } from "../redux/slices/ratelimiterSlice";
 
 interface RateLimitConfig {
   maxAttempts: number;
@@ -37,7 +37,8 @@ export class RateLimiter {
 
   canAttempt(): RateLimitResult {
     const state = this.getState();
-    if (!state) return { allowed: true, remainingAttempts: this.config.maxAttempts };
+    if (!state)
+      return { allowed: true, remainingAttempts: this.config.maxAttempts };
 
     const now = Date.now();
     const timeElapsed = now - state.windowStart;
@@ -51,14 +52,14 @@ export class RateLimiter {
       return {
         allowed: false,
         remainingMs: this.config.windowMs - timeElapsed,
-        remainingAttempts: 0
+        remainingAttempts: 0,
       };
     }
 
     return {
       allowed: true,
       remainingMs: this.config.windowMs - timeElapsed,
-      remainingAttempts: this.config.maxAttempts - state.attempts
+      remainingAttempts: this.config.maxAttempts - state.attempts,
     };
   }
 
@@ -67,19 +68,23 @@ export class RateLimiter {
     const now = Date.now();
 
     if (!state) {
-      store.dispatch(setRateLimit({
-        key: this.key,
-        attempts: 1,
-        windowStart: now
-      }));
+      store.dispatch(
+        setRateLimit({
+          key: this.key,
+          attempts: 1,
+          windowStart: now,
+        })
+      );
       return;
     }
 
-    store.dispatch(setRateLimit({
-      key: this.key,
-      attempts: state.attempts + 1,
-      windowStart: state.windowStart
-    }));
+    store.dispatch(
+      setRateLimit({
+        key: this.key,
+        attempts: state.attempts + 1,
+        windowStart: state.windowStart,
+      })
+    );
   }
 
   reset(): void {
@@ -88,14 +93,20 @@ export class RateLimiter {
 }
 
 const SIGNIN_RATE_LIMIT_CONFIG = {
-  maxAttempts: 5,
-  windowMs: 15 * 60 * 1000, 
+  maxAttempts: 20,
+  windowMs: 15 * 60 * 1000,
 };
 
 const SIGNUP_RATE_LIMIT_CONFIG = {
-  maxAttempts: 3, 
-  windowMs: 30 * 60 * 1000, 
+  maxAttempts: 15,
+  windowMs: 30 * 60 * 1000,
 };
 
-export const signinLimiter = new RateLimiter("signIn", SIGNIN_RATE_LIMIT_CONFIG);
-export const signupLimiter = new RateLimiter("signUp", SIGNUP_RATE_LIMIT_CONFIG);
+export const signinLimiter = new RateLimiter(
+  "signIn",
+  SIGNIN_RATE_LIMIT_CONFIG
+);
+export const signupLimiter = new RateLimiter(
+  "signUp",
+  SIGNUP_RATE_LIMIT_CONFIG
+);

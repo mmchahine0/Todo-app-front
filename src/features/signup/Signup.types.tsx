@@ -5,4 +5,14 @@ export interface SignupCredentials {
 }
 
 export interface ServerError {
-  message: string; }
+  message: string;
+}
+export interface VerificationCredentials {
+  email: string;
+  otp: string;
+}
+
+export interface ServerResponse {
+  message: string;
+  email?: string;
+}
