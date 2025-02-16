@@ -205,7 +205,7 @@ const Signin = () => {
   };
 
   const handleLoginSuccess = (responseData: UserResponse["data"]) => {
-    if (!responseData.isEmailVerified) {
+    if (!responseData.isVerified) {
       setUnverifiedEmail(responseData.email);
       setVerificationStep(true);
       setResendTimer(60);

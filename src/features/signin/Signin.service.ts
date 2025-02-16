@@ -2,6 +2,8 @@ import { apiClient } from "@/api/base";
 import {
   ForgotPasswordCredentials,
   LoginCredentials,
+  ResetPasswordCredentials,
+  ResetPasswordResponse,
   UserResponse,
 } from "./Signin.types";
 import { ENDPOINTS } from "@/api/endpoints";
@@ -24,4 +26,14 @@ export const requestPasswordReset = async (
     data,
   });
   return response as { message: string };
+};
+export const resetPassword = async (
+  data: ResetPasswordCredentials
+): Promise<ResetPasswordResponse> => {
+  const response = await apiClient({
+    method: "POST",
+    endpoint: ENDPOINTS.Auth.ResetPassword,
+    data,
+  });
+  return response as ResetPasswordResponse;
 };
