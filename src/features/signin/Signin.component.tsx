@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { login, requestPasswordReset } from "./Signin.service";
+import { login, requestPasswordReset, resetPassword } from "./Signin.service";
 import { LoginCredentials, UserResponse } from "./Signin.types";
 import {
   Card,
@@ -27,8 +27,6 @@ import {
 import { Helmet } from "react-helmet-async";
 import axios from "axios";
 import { resendVerificationCode, verifyEmail } from "../signup/Signup.service";
-import { VerificationCredentials } from "../signup/Signup.types";
-import { LoadingSpinner } from "@/components/common/loading spinner/LoadingSpinner.component";
 
 const RATE_LIMIT_CONFIG = {
   maxAttempts: 20,
@@ -51,13 +49,16 @@ const Signin = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
-  // Add these with other state declarations
   const [verificationStep, setVerificationStep] = useState(false);
   const [otpInput, setOtpInput] = useState("");
-  // Forgot password states
   const [forgotPasswordStep, setForgotPasswordStep] = useState(false);
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
   const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
+const [resetPasswordStep, setResetPasswordStep] = useState(false);
+const [resetPasswordInput, setResetPasswordInput] = useState({
+  code: "",
+  newPassword: "",
+});
   const [resendTimer, setResendTimer] = useState(0);
 
   const { toast } = useToast();
@@ -102,11 +103,11 @@ const Signin = () => {
   };
 
   const handleResendCode = async () => {
+    setUnverifiedEmail(userInput.email)
     if (resendTimer > 0 || !unverifiedEmail) return;
-
     try {
       await resendVerificationCode(unverifiedEmail);
-      setResendTimer(60); // 60-second cooldown
+      setResendTimer(60); 
       toast({
         title: "Verification Code Sent",
         description: "A new verification code has been sent to your email.",
@@ -127,32 +128,35 @@ const Signin = () => {
   };
   const handleVerificationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     const otpError = validateField("otp", otpInput);
     if (otpError) {
       setErrors((prev) => ({ ...prev, otp: otpError }));
       return;
     }
-
+  
     setIsLoading(true);
     try {
-      const verificationData: VerificationCredentials = {
+      // First verify the email
+      await verifyEmail({
         email: unverifiedEmail!,
         otp: otpInput,
-      };
-
-      await verifyEmail(verificationData);
-
-      // After successful verification, try to login again
+      });
+  
+      // After successful verification, attempt login again
       const response = await login(userInput);
       handleLoginSuccess(response.data);
+      
+      toast({
+        title: "Email Verified",
+        description: "Your email has been verified successfully.",
+        duration: 3000,
+      });
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        const errorMessage =
-          error.response?.data?.message || "Verification failed";
+        const errorMessage = error.response?.data?.message || "Verification failed";
         setErrors((prev) => ({ ...prev, server: errorMessage }));
         toast({
-          title: "Error",
+          title: "Verification Failed",
           description: errorMessage,
           variant: "destructive",
           duration: 3000,
@@ -164,33 +168,32 @@ const Signin = () => {
   };
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-
+  
     const emailError = validateField("email", forgotPasswordEmail);
     if (emailError) {
       setErrors((prev) => ({ ...prev, email: emailError }));
       return;
     }
-
+  
     setForgotPasswordLoading(true);
     try {
       await requestPasswordReset({ email: forgotPasswordEmail });
-      setResendTimer(60); // Start 60-second cooldown
-
+      setResendTimer(60);
+      setResetPasswordStep(true); 
+      setErrors({
+        email: "",
+        password: "",
+        server: "",
+        otp: "",
+      });
       toast({
         title: "Reset Code Sent",
         description: "Please check your email for the password reset code.",
         duration: 5000,
       });
-
-      // Navigate to reset password page
-      navigate("/auth/reset-password", {
-        state: { email: forgotPasswordEmail },
-        replace: true,
-      });
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        const errorMessage =
-          error.response?.data?.message || "Failed to send reset code";
+        const errorMessage = error.response?.data?.message || "Failed to send reset code";
         setErrors((prev) => ({ ...prev, server: errorMessage }));
         toast({
           title: "Error",
@@ -203,21 +206,57 @@ const Signin = () => {
       setForgotPasswordLoading(false);
     }
   };
-
-  const handleLoginSuccess = (responseData: UserResponse["data"]) => {
-    if (!responseData.isVerified) {
-      setUnverifiedEmail(responseData.email);
-      setVerificationStep(true);
-      setResendTimer(60);
-      toast({
-        title: "Verification Required",
-        description: "Please verify your email to continue.",
-        duration: 2000,
-        variant: "destructive",
-      });
+  const handleResetPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+  
+    const codeError = validateField("otp", resetPasswordInput.code);
+    const passwordError = validateField("password", resetPasswordInput.newPassword);
+  
+    if (codeError || passwordError) {
+      setErrors((prev) => ({
+        ...prev,
+        otp: codeError,
+        password: passwordError,
+      }));
       return;
     }
-
+  
+    setIsLoading(true);
+    try {
+      await resetPassword({
+        email: forgotPasswordEmail,
+        code: resetPasswordInput.code,
+        newPassword: resetPasswordInput.newPassword,
+      });
+  
+      toast({
+        title: "Password Reset Successful",
+        description: "You can now sign in with your new password.",
+        duration: 3000,
+      });
+  
+      // Reset all states and go back to sign in
+      setForgotPasswordStep(false);
+      setResetPasswordStep(false);
+      setForgotPasswordEmail("");
+      setResetPasswordInput({ code: "", newPassword: "" });
+      setErrors({ email: "", password: "", server: "", otp: "" });
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data?.message || "Failed to reset password";
+        setErrors((prev) => ({ ...prev, server: errorMessage }));
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+          duration: 3000,
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const handleLoginSuccess = (responseData: UserResponse["data"]) => {
     dispatch(
       setCredentials({
         accessToken: responseData.accessToken,
@@ -277,6 +316,7 @@ const Signin = () => {
     try {
       const response = await login(userInput);
       handleLoginSuccess(response.data);
+      
     } catch (error) {
       signinLimiter.increment();
       if (axios.isAxiosError(error)) {
@@ -290,12 +330,28 @@ const Signin = () => {
           duration: 3000,
         });
       }
+      if (
+        axios.isAxiosError(error) &&
+        error.response?.status === 403 &&
+        (error.response.data as { message: string }).message.includes(
+          "Email not verified. Please verify your email first."
+        )
+      )  {
+        setVerificationStep(true) 
+        setErrors({
+          email: "",
+          password: "",
+          server: "",
+          otp: "",
+        });
+        setResendTimer(60);
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
-  return (
+  return(
     <>
       <Helmet>
         <title>
@@ -318,90 +374,198 @@ const Signin = () => {
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">
               {forgotPasswordStep
-                ? "Reset your password"
+                ? resetPasswordStep 
+                  ? "Reset your password"
+                  : "Forgot Password"
                 : "Sign in to your account"}
             </CardTitle>
             <CardDescription className="text-center text-gray-500">
               {forgotPasswordStep
-                ? "Enter your email to receive a password reset code"
+                ? resetPasswordStep
+                  ? "Enter the code from your email and your new password"
+                  : "Enter your email to receive a password reset code"
                 : "Enter your credentials to access your account"}
             </CardDescription>
           </CardHeader>
 
           <CardContent>
             {forgotPasswordStep ? (
-              <form onSubmit={handleForgotPassword} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="forgotPasswordEmail">Email address</Label>
-                  <div className="relative">
-                    <Mail
-                      className="absolute left-3 top-3 h-4 w-4 text-gray-400"
-                      aria-hidden="true"
-                    />
-                    <Input
-                      id="forgotPasswordEmail"
-                      name="email"
-                      type="email"
-                      placeholder="Enter your email"
-                      value={forgotPasswordEmail}
-                      onChange={(e) => {
-                        setForgotPasswordEmail(e.target.value);
-                        const fieldError = validateField(
-                          "email",
-                          e.target.value
-                        );
-                        setErrors((prev) => ({ ...prev, email: fieldError }));
-                      }}
-                      className={`pl-10 ${
-                        errors.email ? "border-red-500" : ""
-                      }`}
-                    />
-                    {errors.email && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {errors.email}
-                      </p>
-                    )}
+              resetPasswordStep ? (
+                // Reset Password Form
+                <form onSubmit={handleResetPasswordSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="resetCode">Reset Code</Label>
+                    <div className="relative">
+                      <KeyRound
+                        className="absolute left-3 top-3 h-4 w-4 text-gray-400"
+                        aria-hidden="true"
+                      />
+                      <Input
+                        id="resetCode"
+                        name="code"
+                        type="text"
+                        maxLength={6}
+                        placeholder="Enter 6-digit code"
+                        value={resetPasswordInput.code}
+                        onChange={(e) => {
+                          setResetPasswordInput(prev => ({ ...prev, code: e.target.value }));
+                          const otpError = validateField("otp", e.target.value);
+                          setErrors((prev) => ({ ...prev, otp: otpError }));
+                        }}
+                        className={`pl-10 ${errors.otp ? "border-red-500" : ""}`}
+                      />
+                      {errors.otp && (
+                        <p className="mt-1 text-xs text-red-500">{errors.otp}</p>
+                      )}
+                    </div>
                   </div>
-                </div>
 
-                {errors.server && (
-                  <div className="text-sm text-red-500 text-center p-2 bg-red-50 rounded">
-                    {errors.server}
+                  <div className="space-y-2">
+                    <Label htmlFor="newPassword">New Password</Label>
+                    <div className="relative">
+                      <Lock
+                        className="absolute left-3 top-3 h-4 w-4 text-gray-400"
+                        aria-hidden="true"
+                      />
+                      <Input
+                        id="newPassword"
+                        name="newPassword"
+                        type="password"
+                        placeholder="Enter new password"
+                        value={resetPasswordInput.newPassword}
+                        onChange={(e) => {
+                          setResetPasswordInput(prev => ({ ...prev, newPassword: e.target.value }));
+                          const passwordError = validateField("password", e.target.value);
+                          setErrors((prev) => ({ ...prev, password: passwordError }));
+                        }}
+                        className={`pl-10 ${errors.password ? "border-red-500" : ""}`}
+                      />
+                      {errors.password && (
+                        <p className="mt-1 text-xs text-red-500">{errors.password}</p>
+                      )}
+                    </div>
                   </div>
-                )}
 
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={forgotPasswordLoading || resendTimer > 0}
-                >
-                  {forgotPasswordLoading
-                    ? "Sending..."
-                    : resendTimer > 0
-                    ? `Try again in ${resendTimer}s`
-                    : "Send Reset Code"}
-                </Button>
+                  <div className="text-center">
+                    <Button
+                      type="button"
+                      variant="link"
+                      onClick={handleResendCode}
+                      disabled={resendTimer > 0}
+                      className="text-sm"
+                    >
+                      {resendTimer > 0
+                        ? `Resend code in ${resendTimer}s`
+                        : "Resend reset code"}
+                    </Button>
+                  </div>
 
-                <div className="text-center">
-                  <Button
-                    type="button"
-                    variant="link"
-                    className="text-sm"
-                    onClick={() => {
-                      setForgotPasswordStep(false);
-                      setErrors({
-                        email: "",
-                        password: "",
-                        server: "",
-                        otp: "",
-                      });
-                    }}
-                  >
-                    Back to Sign in
+                  {errors.server && (
+                    <div className="text-sm text-red-500 text-center p-2 bg-red-50 rounded">
+                      {errors.server}
+                    </div>
+                  )}
+
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? "Resetting..." : "Reset Password"}
                   </Button>
-                </div>
-              </form>
+
+                  <div className="text-center">
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="text-sm"
+                      onClick={() => {
+                        setForgotPasswordStep(false);
+                        setResetPasswordStep(false);
+                        setErrors({
+                          email: "",
+                          password: "",
+                          server: "",
+                          otp: "",
+                        });
+                      }}
+                    >
+                      Back to Sign in
+                    </Button>
+                  </div>
+                </form>
+              ) : (
+                // Forgot Password Email Form
+                <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="forgotPasswordEmail">Email address</Label>
+                    <div className="relative">
+                      <Mail
+                        className="absolute left-3 top-3 h-4 w-4 text-gray-400"
+                        aria-hidden="true"
+                      />
+                      <Input
+                        id="forgotPasswordEmail"
+                        name="email"
+                        type="email"
+                        placeholder="Enter your email"
+                        value={forgotPasswordEmail}
+                        onChange={(e) => {
+                          setForgotPasswordEmail(e.target.value);
+                          const fieldError = validateField(
+                            "email",
+                            e.target.value
+                          );
+                          setErrors((prev) => ({ ...prev, email: fieldError }));
+                        }}
+                        className={`pl-10 ${
+                          errors.email ? "border-red-500" : ""
+                        }`}
+                      />
+                      {errors.email && (
+                        <p className="mt-1 text-xs text-red-500">
+                          {errors.email}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {errors.server && (
+                    <div className="text-sm text-red-500 text-center p-2 bg-red-50 rounded">
+                      {errors.server}
+                    </div>
+                  )}
+
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={forgotPasswordLoading || resendTimer > 0}
+                  >
+                    {forgotPasswordLoading
+                      ? "Sending..."
+                      : resendTimer > 0
+                      ? `Try again in ${resendTimer}s`
+                      : "Send Reset Code"}
+                  </Button>
+
+                  <div className="text-center">
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="text-sm"
+                      onClick={() => {
+                        setForgotPasswordStep(false);
+                        setErrors({
+                          email: "",
+                          password: "",
+                          server: "",
+                          otp: "",
+                        });
+                      }}
+                    >
+                      Back to Sign in
+                    </Button>
+                  </div>
+                </form>
+              )
             ) : verificationStep ? (
+              // Email Verification Form
               <form onSubmit={handleVerificationSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="otp">Verification Code</Label>
@@ -452,11 +616,7 @@ const Signin = () => {
                 )}
 
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? (
-                    <LoadingSpinner size="lg" label="Verifying..." />
-                  ) : (
-                    "Verify Email"
-                  )}
+                  {isLoading ? "Verifying..." : "Verify"}
                 </Button>
 
                 <div className="text-center">
@@ -479,6 +639,7 @@ const Signin = () => {
                 </div>
               </form>
             ) : (
+              // Sign In Form
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-1">
                   <Label htmlFor="email">Email address</Label>
