@@ -24,7 +24,6 @@ import {
 } from "../../utils/validationConstants";
 import { AxiosError } from "axios";
 import { Helmet } from "react-helmet-async";
-import { LoadingSpinner } from "@/components/common/loading spinner/LoadingSpinner.component";
 
 const RATE_LIMIT_CONFIG = {
   maxAttempts: 5,
@@ -230,9 +229,7 @@ const Signup: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>
-          {verificationStep ? "Verify Email" : "Create Account"} | Your App Name
-        </title>
+        <title>{verificationStep ? "Verify Email" : "Create Account"}</title>
         <meta
           name="description"
           content={
@@ -306,11 +303,7 @@ const Signup: React.FC = () => {
                 )}
 
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? (
-                    <LoadingSpinner size="lg" label="Verifying..." />
-                  ) : (
-                    "Verify Email"
-                  )}
+                  {isLoading ? "Verifying..." : "Verify email"}
                 </Button>
               </form>
             ) : (

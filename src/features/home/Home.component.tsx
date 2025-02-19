@@ -38,16 +38,13 @@ const Home: React.FC = () => {
       } as Partial<SiteContent>),
   });
 
-
   if (
     isLoading ||
     !contentResponse ||
     !contentResponse.features ||
     !contentResponse.statistics
   ) {
-    return (
-             <LoadingSpinner size="lg" label="Loading Home..." />
-    );
+    return <LoadingSpinner size="lg" label="Loading Home..." />;
   }
 
   const { hero, features, statistics, cta } = contentResponse;
@@ -56,7 +53,7 @@ const Home: React.FC = () => {
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: hero?.title || "Your App Name",
+    name: hero?.title,
     description: hero?.subtitle || "Welcome to our application",
     url: window.location.origin,
     potentialAction: {
@@ -69,7 +66,7 @@ const Home: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>{hero?.title || "Welcome"} | Your App Name</title>
+        <title>{hero?.title || "Welcome"}</title>
         <meta
           name="description"
           content={hero?.subtitle || "Welcome to our application"}

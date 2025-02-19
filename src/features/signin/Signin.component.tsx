@@ -54,11 +54,11 @@ const Signin = () => {
   const [forgotPasswordStep, setForgotPasswordStep] = useState(false);
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
   const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
-const [resetPasswordStep, setResetPasswordStep] = useState(false);
-const [resetPasswordInput, setResetPasswordInput] = useState({
-  code: "",
-  newPassword: "",
-});
+  const [resetPasswordStep, setResetPasswordStep] = useState(false);
+  const [resetPasswordInput, setResetPasswordInput] = useState({
+    code: "",
+    newPassword: "",
+  });
   const [resendTimer, setResendTimer] = useState(0);
 
   const { toast } = useToast();
@@ -103,11 +103,11 @@ const [resetPasswordInput, setResetPasswordInput] = useState({
   };
 
   const handleResendCode = async () => {
-    setUnverifiedEmail(userInput.email)
+    setUnverifiedEmail(userInput.email);
     if (resendTimer > 0 || !unverifiedEmail) return;
     try {
       await resendVerificationCode(unverifiedEmail);
-      setResendTimer(60); 
+      setResendTimer(60);
       toast({
         title: "Verification Code Sent",
         description: "A new verification code has been sent to your email.",
@@ -133,7 +133,7 @@ const [resetPasswordInput, setResetPasswordInput] = useState({
       setErrors((prev) => ({ ...prev, otp: otpError }));
       return;
     }
-  
+
     setIsLoading(true);
     try {
       // First verify the email
@@ -141,11 +141,11 @@ const [resetPasswordInput, setResetPasswordInput] = useState({
         email: unverifiedEmail!,
         otp: otpInput,
       });
-  
+
       // After successful verification, attempt login again
       const response = await login(userInput);
       handleLoginSuccess(response.data);
-      
+
       toast({
         title: "Email Verified",
         description: "Your email has been verified successfully.",
@@ -153,7 +153,8 @@ const [resetPasswordInput, setResetPasswordInput] = useState({
       });
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        const errorMessage = error.response?.data?.message || "Verification failed";
+        const errorMessage =
+          error.response?.data?.message || "Verification failed";
         setErrors((prev) => ({ ...prev, server: errorMessage }));
         toast({
           title: "Verification Failed",
@@ -168,18 +169,18 @@ const [resetPasswordInput, setResetPasswordInput] = useState({
   };
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-  
+
     const emailError = validateField("email", forgotPasswordEmail);
     if (emailError) {
       setErrors((prev) => ({ ...prev, email: emailError }));
       return;
     }
-  
+
     setForgotPasswordLoading(true);
     try {
       await requestPasswordReset({ email: forgotPasswordEmail });
       setResendTimer(60);
-      setResetPasswordStep(true); 
+      setResetPasswordStep(true);
       setErrors({
         email: "",
         password: "",
@@ -193,7 +194,8 @@ const [resetPasswordInput, setResetPasswordInput] = useState({
       });
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        const errorMessage = error.response?.data?.message || "Failed to send reset code";
+        const errorMessage =
+          error.response?.data?.message || "Failed to send reset code";
         setErrors((prev) => ({ ...prev, server: errorMessage }));
         toast({
           title: "Error",
@@ -208,10 +210,13 @@ const [resetPasswordInput, setResetPasswordInput] = useState({
   };
   const handleResetPasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  
+
     const codeError = validateField("otp", resetPasswordInput.code);
-    const passwordError = validateField("password", resetPasswordInput.newPassword);
-  
+    const passwordError = validateField(
+      "password",
+      resetPasswordInput.newPassword
+    );
+
     if (codeError || passwordError) {
       setErrors((prev) => ({
         ...prev,
@@ -220,7 +225,7 @@ const [resetPasswordInput, setResetPasswordInput] = useState({
       }));
       return;
     }
-  
+
     setIsLoading(true);
     try {
       await resetPassword({
@@ -228,13 +233,13 @@ const [resetPasswordInput, setResetPasswordInput] = useState({
         code: resetPasswordInput.code,
         newPassword: resetPasswordInput.newPassword,
       });
-  
+
       toast({
         title: "Password Reset Successful",
         description: "You can now sign in with your new password.",
         duration: 3000,
       });
-  
+
       // Reset all states and go back to sign in
       setForgotPasswordStep(false);
       setResetPasswordStep(false);
@@ -243,7 +248,8 @@ const [resetPasswordInput, setResetPasswordInput] = useState({
       setErrors({ email: "", password: "", server: "", otp: "" });
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        const errorMessage = error.response?.data?.message || "Failed to reset password";
+        const errorMessage =
+          error.response?.data?.message || "Failed to reset password";
         setErrors((prev) => ({ ...prev, server: errorMessage }));
         toast({
           title: "Error",
@@ -316,7 +322,6 @@ const [resetPasswordInput, setResetPasswordInput] = useState({
     try {
       const response = await login(userInput);
       handleLoginSuccess(response.data);
-      
     } catch (error) {
       signinLimiter.increment();
       if (axios.isAxiosError(error)) {
@@ -336,14 +341,15 @@ const [resetPasswordInput, setResetPasswordInput] = useState({
         (error.response.data as { message: string }).message.includes(
           "Email not verified. Please verify your email first."
         )
-      )  {
-        setVerificationStep(true) 
+      ) {
+        setVerificationStep(true);
         setErrors({
           email: "",
           password: "",
           server: "",
           otp: "",
         });
+        await resendVerificationCode(userInput.email);
         setResendTimer(60);
       }
     } finally {
@@ -351,12 +357,10 @@ const [resetPasswordInput, setResetPasswordInput] = useState({
     }
   };
 
-  return(
+  return (
     <>
       <Helmet>
-        <title>
-          {forgotPasswordStep ? "Reset Password" : "Sign In"} | Your App Name
-        </title>
+        <title>{forgotPasswordStep ? "Reset Password" : "Sign In"}</title>
         <meta
           name="description"
           content={
@@ -374,7 +378,7 @@ const [resetPasswordInput, setResetPasswordInput] = useState({
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">
               {forgotPasswordStep
-                ? resetPasswordStep 
+                ? resetPasswordStep
                   ? "Reset your password"
                   : "Forgot Password"
                 : "Sign in to your account"}
@@ -392,7 +396,10 @@ const [resetPasswordInput, setResetPasswordInput] = useState({
             {forgotPasswordStep ? (
               resetPasswordStep ? (
                 // Reset Password Form
-                <form onSubmit={handleResetPasswordSubmit} className="space-y-4">
+                <form
+                  onSubmit={handleResetPasswordSubmit}
+                  className="space-y-4"
+                >
                   <div className="space-y-2">
                     <Label htmlFor="resetCode">Reset Code</Label>
                     <div className="relative">
@@ -408,14 +415,21 @@ const [resetPasswordInput, setResetPasswordInput] = useState({
                         placeholder="Enter 6-digit code"
                         value={resetPasswordInput.code}
                         onChange={(e) => {
-                          setResetPasswordInput(prev => ({ ...prev, code: e.target.value }));
+                          setResetPasswordInput((prev) => ({
+                            ...prev,
+                            code: e.target.value,
+                          }));
                           const otpError = validateField("otp", e.target.value);
                           setErrors((prev) => ({ ...prev, otp: otpError }));
                         }}
-                        className={`pl-10 ${errors.otp ? "border-red-500" : ""}`}
+                        className={`pl-10 ${
+                          errors.otp ? "border-red-500" : ""
+                        }`}
                       />
                       {errors.otp && (
-                        <p className="mt-1 text-xs text-red-500">{errors.otp}</p>
+                        <p className="mt-1 text-xs text-red-500">
+                          {errors.otp}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -434,14 +448,27 @@ const [resetPasswordInput, setResetPasswordInput] = useState({
                         placeholder="Enter new password"
                         value={resetPasswordInput.newPassword}
                         onChange={(e) => {
-                          setResetPasswordInput(prev => ({ ...prev, newPassword: e.target.value }));
-                          const passwordError = validateField("password", e.target.value);
-                          setErrors((prev) => ({ ...prev, password: passwordError }));
+                          setResetPasswordInput((prev) => ({
+                            ...prev,
+                            newPassword: e.target.value,
+                          }));
+                          const passwordError = validateField(
+                            "password",
+                            e.target.value
+                          );
+                          setErrors((prev) => ({
+                            ...prev,
+                            password: passwordError,
+                          }));
                         }}
-                        className={`pl-10 ${errors.password ? "border-red-500" : ""}`}
+                        className={`pl-10 ${
+                          errors.password ? "border-red-500" : ""
+                        }`}
                       />
                       {errors.password && (
-                        <p className="mt-1 text-xs text-red-500">{errors.password}</p>
+                        <p className="mt-1 text-xs text-red-500">
+                          {errors.password}
+                        </p>
                       )}
                     </div>
                   </div>
