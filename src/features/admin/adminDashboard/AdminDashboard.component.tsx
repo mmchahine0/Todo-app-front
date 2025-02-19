@@ -5,10 +5,12 @@ import {
   getAllUsers,
   updateUserRole,
   updateUserStatus,
+} from "./AdminDashboard.services";
+import {
+  User,
   ConfirmDialogState,
   StatusMessage,
-} from "./AdminDashboard.services";
-import { User } from "./AdminDashboard.types";
+} from "./AdminDashboard.types";
 import { Helmet } from "react-helmet-async";
 import {
   Table,

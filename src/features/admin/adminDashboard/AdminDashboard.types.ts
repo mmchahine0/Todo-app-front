@@ -6,7 +6,6 @@ export interface User {
   suspended: boolean;
   createdAt: string;
 }
-
 export interface UsersResponse {
   statusCode: number;
   message: string;
