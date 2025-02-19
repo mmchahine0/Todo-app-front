@@ -26,7 +26,7 @@ const MainRouter: React.FC = () => {
 
   if (isLoading) {
     return (
-<div
+      <div
         role="alert"
         aria-busy="true"
         className="fixed inset-0 bg-white/90 flex items-center justify-center backdrop-blur-sm"
@@ -36,7 +36,8 @@ const MainRouter: React.FC = () => {
           aria-label="Loading content"
         />
         <span className="sr-only">Loading page content...</span>
-      </div>    );
+      </div>
+    );
   }
 
   // For static routes
@@ -101,7 +102,7 @@ const MainRouter: React.FC = () => {
         {dynamicRoutes.map(renderDynamicRoute)}
 
         {/* Redirect root to home */}
-        <Route path="/" element={<Navigate to="/dashboard/home" replace />} />
+        <Route path="/" element={<Navigate to="/home" replace />} />
 
         {/* Fallback Route */}
         <Route path="*" element={<NotFound />} />

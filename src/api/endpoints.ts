@@ -39,4 +39,8 @@ export const ENDPOINTS = {
     Get: "/content",
     Update: (section: string) => `/admin/content/${section}`,
   },
+  SEO: {
+    Get: (pageId: string) => `/api/pages/${pageId}/seo`,
+    Update: (pageId: string) => `/api/admin/pages/${pageId}/seo`,
+  },
 };
