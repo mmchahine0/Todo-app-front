@@ -2,16 +2,34 @@ import path from "path";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import compression from "vite-plugin-compression";
+import { htmlPlugin } from "./vite-html-plugin";
 
 export default defineConfig({
   plugins: [
     react(),
+    htmlPlugin(),
+    // Gzip compression
     compression({
       algorithm: "gzip",
       ext: ".gz",
-      threshold: 10240, // Only compress files larger than 10kb
+      threshold: 1024, // Compress files larger than 1kb
       deleteOriginFile: false,
       filter: /\.(js|mjs|json|css|html)$/i,
+      verbose: true,
+      compressionOptions: {
+        level: 9, // Maximum compression level
+      },
+    }),
+    // Additional Brotli compression
+    compression({
+      algorithm: "brotliCompress",
+      ext: ".br",
+      threshold: 1024,
+      deleteOriginFile: false,
+      filter: /\.(js|mjs|json|css|html)$/i,
+      compressionOptions: {
+        level: 11,
+      },
     }),
   ],
   resolve: {
@@ -20,14 +38,10 @@ export default defineConfig({
     },
   },
   build: {
-    // Enable source maps for debugging
     sourcemap: true,
-
-    // Optimize chunk size
     rollupOptions: {
       output: {
         manualChunks: {
-          // Group major dependencies
           "react-vendor": ["react", "react-dom", "react-router-dom"],
           "ui-components": [
             "@radix-ui/react-alert-dialog",
@@ -50,35 +64,31 @@ export default defineConfig({
           ],
           query: ["@tanstack/react-query"],
         },
-        // Customize chunk filenames
         chunkFileNames: "assets/js/[name]-[hash].js",
         entryFileNames: "assets/js/[name]-[hash].js",
         assetFileNames: "assets/[ext]/[name]-[hash].[ext]",
       },
     },
 
-    // Optimize build
     minify: "terser",
     terserOptions: {
       compress: {
-        drop_console: true, // Remove console.logs in production
+        drop_console: true,
         drop_debugger: true,
+        pure_funcs: ["console.log"],
+      },
+      format: {
+        comments: false,
       },
     },
 
-    // Configure chunk size warnings
     chunkSizeWarningLimit: 1000,
-
-    // Asset optimization
-    assetsInlineLimit: 4096, // 4kb - files smaller than this will be inlined
-
-    // Output directory configuration
+    assetsInlineLimit: 4096,
     outDir: "dist",
     assetsDir: "assets",
     emptyOutDir: true,
   },
 
-  // Development server configuration
   server: {
     port: 3000,
     open: true,
@@ -89,7 +99,6 @@ export default defineConfig({
     },
   },
 
-  // Optimize dependencies pre-bundling
   optimizeDeps: {
     include: [
       "react",
@@ -101,7 +110,6 @@ export default defineConfig({
     ],
   },
 
-  // Enable fast refresh
   experimental: {
     hmrPartialAccept: true,
   },
