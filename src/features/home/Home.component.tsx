@@ -139,7 +139,6 @@ const Home: React.FC = () => {
               alt="Hero section background showing our application interface"
               className="absolute inset-0 w-full h-full object-cover mix-blend-overlay"
               loading="eager"
-              fetchpriority="high"
               width="1920"
               height="1080"
               decoding="async"
