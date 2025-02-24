@@ -520,7 +520,7 @@ const Signin = () => {
                   <Button
                     type="button"
                     variant="default"
-                    onClick={handleResendForgotCode}
+                    onClick={handleResetPasswordSubmit}
                     className="w-full"
                     disabled={isLoading}
                   >
