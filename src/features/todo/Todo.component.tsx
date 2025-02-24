@@ -519,7 +519,7 @@ const TodoDashboard = () => {
                           </div>
                         </div>
                         <div className="flex gap-2 ml-8">
-                          <Button
+                        <Button
                             onClick={() =>
                               setEditingTodo({
                                 id: todo.id,
@@ -533,16 +533,12 @@ const TodoDashboard = () => {
                             Edit
                           </Button>
                           <Button
-                            onClick={() =>
-                              handleDeleteClick(todo.id, todo.title)
-                            }
-                            disabled={deleteMutation.isPending}
+                            onClick={() => handleDeleteClick(todo.id, todo.title)}
+                            disabled={deleteMutation.isPending && deleteDialog.todoId === todo.id}
                             className="bg-red-500 hover:bg-red-600 text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
                             aria-label={`Delete "${todo.title}"`}
                           >
-                            {deleteMutation.isPending
-                              ? "Deleting..."
-                              : "Delete"}
+                            {deleteMutation.isPending && deleteDialog.todoId === todo.id ? "Deleting..." : "Delete"}
                           </Button>
                         </div>
                       </div>

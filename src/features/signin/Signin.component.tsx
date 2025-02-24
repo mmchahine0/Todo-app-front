@@ -158,12 +158,11 @@ const Signin = () => {
       setErrors((prev) => ({ ...prev, otp: otpError }));
       return;
     }
-
     setIsLoading(true);
     try {
       // First verify the email
       await verifyEmail({
-        email: unverifiedEmail!,
+        email: userInput.email,
         otp: otpInput,
       });
 
