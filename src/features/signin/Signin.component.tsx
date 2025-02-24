@@ -126,6 +126,31 @@ const Signin = () => {
       }
     }
   };
+  const handleResendForgotCode = async () => {
+    if (resendTimer > 0) return;
+
+    try {
+      await requestPasswordReset({ email: forgotPasswordEmail });
+      setResendTimer(60);
+      toast({
+        title: "Reset Code Sent",
+        description: "A new password reset code has been sent to your email.",
+        duration: 3000,
+      });
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const errorMessage =
+          error.response?.data?.message || "Failed to send reset code";
+        setErrors((prev) => ({ ...prev, server: errorMessage }));
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+          duration: 3000,
+        });
+      }
+    }
+  };
   const handleVerificationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const otpError = validateField("otp", otpInput);
@@ -477,7 +502,7 @@ const Signin = () => {
                     <Button
                       type="button"
                       variant="link"
-                      onClick={handleResendCode}
+                      onClick={handleResendForgotCode}
                       disabled={resendTimer > 0}
                       className="text-sm"
                     >
