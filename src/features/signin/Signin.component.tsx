@@ -519,8 +519,8 @@ const Signin = () => {
 
                   <Button
                     type="button"
-                    variant="link"
-                    onClick={handleResetPasswordSubmit}
+                    variant="default"
+                    onClick={handleResendForgotCode}
                     className="w-full"
                     disabled={isLoading}
                   >
