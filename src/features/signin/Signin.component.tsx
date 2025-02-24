@@ -517,7 +517,13 @@ const Signin = () => {
                     </div>
                   )}
 
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  <Button
+                    type="button"
+                    variant="link"
+                    onClick={handleResetPasswordSubmit}
+                    className="w-full"
+                    disabled={isLoading}
+                  >
                     {isLoading ? "Resetting..." : "Reset Password"}
                   </Button>
 
