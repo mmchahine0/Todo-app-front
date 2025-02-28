@@ -17,6 +17,10 @@ import type { RootState } from "@/redux/persist/persist";
 import { queryClient } from "../../lib/queryClient";
 import { Helmet } from "react-helmet-async";
 import { DeleteAlertDialog } from "@/components/common/alert dialog form/DeleteAlertDialog.component";
+// import socketService from "@/utils/websocket.ts";
+import { TodoCollaborators } from "./todo collab/TodoCollaborators.component.tsx";
+import { TodoComments } from "./todo collab/TodoComments.component.tsx";
+
 const ITEMS_PER_PAGE = 6;
 
 const TodoDashboard = () => {
@@ -52,6 +56,92 @@ const TodoDashboard = () => {
     todoId: "",
     todoTitle: "",
   });
+
+  // Initialize socket connection and handle real-time updates
+  // useEffect(() => {
+  //   // Initialize socket connection when the component mounts
+  //   socketService.connect();
+    
+  //   // Listen for real-time updates
+  //   socketService.onTodoCreated((newTodo) => {
+  //     queryClient.setQueryData(
+  //       ["todos", filterStatus],
+  //       (oldData: any) => {
+  //         if (!oldData?.pages || oldData.pages.length === 0) return oldData;
+          
+  //         // Add the new todo to the first page
+  //         const newPages = [...oldData.pages];
+  //         newPages[0] = {
+  //           ...newPages[0],
+  //           data: [newTodo, ...newPages[0].data],
+  //         };
+          
+  //         return {
+  //           ...oldData,
+  //           pages: newPages,
+  //         };
+  //       }
+  //     );
+      
+  //     toast({
+  //       title: "New Todo Created",
+  //       description: `A new todo "${newTodo.title}" has been created`,
+  //       duration: 3000,
+  //     });
+  //   });
+    
+  //   socketService.onTodoUpdated((updatedTodo) => {
+  //     queryClient.setQueryData(
+  //       ["todos", filterStatus],
+  //       (oldData: any) => {
+  //         if (!oldData?.pages) return oldData;
+          
+  //         // Update the todo in all pages
+  //         const newPages = oldData.pages.map((page: any) => ({
+  //           ...page,
+  //           data: page.data.map((todo: any) => 
+  //             todo.id === updatedTodo.id ? updatedTodo : todo
+  //           ),
+  //         }));
+          
+  //         return {
+  //           ...oldData,
+  //           pages: newPages,
+  //         };
+  //       }
+  //     );
+  //   });
+    
+  //   socketService.onTodoDeleted((deletedTodo) => {
+  //     queryClient.setQueryData(
+  //       ["todos", filterStatus],
+  //       (oldData: any) => {
+  //         if (!oldData?.pages) return oldData;
+          
+  //         // Remove the todo from all pages
+  //         const newPages = oldData.pages.map((page: any) => ({
+  //           ...page,
+  //           data: page.data.filter((todo: any) => todo.id !== deletedTodo.id),
+  //         }));
+          
+  //         return {
+  //           ...oldData,
+  //           pages: newPages,
+  //         };
+  //       }
+  //     );
+      
+  //     toast({
+  //       title: "Todo Deleted",
+  //       description: "A todo has been deleted",
+  //       duration: 3000,
+  //     });
+  //   });
+    
+  //   return () => {
+  //     // Clean up socket listeners when component unmounts
+  //   };
+  // }, [filterStatus, toast]);
 
   // Clear status message after announcement
   useEffect(() => {
@@ -519,7 +609,9 @@ const TodoDashboard = () => {
                           </div>
                         </div>
                         <div className="flex gap-2 ml-8">
-                        <Button
+                          <TodoCollaborators todoId={todo.id} title={todo.title} />
+                          <TodoComments todoId={todo.id} title={todo.title} />
+                          <Button
                             onClick={() =>
                               setEditingTodo({
                                 id: todo.id,

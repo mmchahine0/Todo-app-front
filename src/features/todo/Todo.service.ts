@@ -5,6 +5,13 @@ import {
   TodoResponse,
   TodoInput,
   PaginationParams,
+  CollaboratorInput,
+  CommentInput,
+  NotificationsResponse,
+  TodoCollaborator,
+  TodoComment,
+  TodoCommentsResponse,
+  Notification
 } from "./Todo.types";
 import { ENDPOINTS } from "../../api/endpoints";
 
@@ -58,4 +65,67 @@ export const deleteTodo = async (
     endpoint: ENDPOINTS.Todos.ById(todoId),
     accessToken,
   });
+};
+
+export const addCollaborator = async (
+  todoId: string,
+  collaboratorData: CollaboratorInput,
+  accessToken: string
+): Promise<TodoCollaborator> => {
+  const response = await apiClient({
+    method: "POST",
+    endpoint: `${ENDPOINTS.Todos.ById(todoId)}`,
+    data: collaboratorData,
+    accessToken,
+  });
+  return response.data;
+};
+
+export const getTodoComments = async (
+  todoId: string,
+  accessToken: string
+): Promise<TodoComment[]> => {
+  const response = await apiClient({
+    method: "GET",
+    endpoint: `${ENDPOINTS.Todos.ById(todoId)}`,
+    accessToken,
+  });
+  return (response as TodoCommentsResponse).data;
+};
+
+export const addComment = async (
+  todoId: string,
+  commentData: CommentInput,
+  accessToken: string
+): Promise<TodoComment> => {
+  const response = await apiClient({
+    method: "POST",
+    endpoint: `${ENDPOINTS.Todos.ById(todoId)}`,
+    data: commentData,
+    accessToken,
+  });
+  return response.data;
+};
+
+export const getNotifications = async (
+  accessToken: string
+): Promise<Notification[]> => {
+  const response = await apiClient({
+    method: "GET",
+    endpoint: ENDPOINTS.Notifications.Base,
+    accessToken,
+  });
+  return (response as NotificationsResponse).data;
+};
+
+export const markNotificationAsRead = async (
+  notificationId: string,
+  accessToken: string
+): Promise<Notification> => {
+  const response = await apiClient({
+    method: "PUT",
+    endpoint: `${ENDPOINTS.Notifications.ById(notificationId)}`,
+    accessToken,
+  });
+  return response.data;
 };

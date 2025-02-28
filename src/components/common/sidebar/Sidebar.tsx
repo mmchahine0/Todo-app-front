@@ -19,6 +19,7 @@ import { clearCredentials } from "@/redux/slices/authSlices";
 import { clearUserData } from "@/redux/slices/userSlice";
 import { queryClient } from "@/lib/queryClient";
 import { useCallback, useEffect } from "react";
+import { NotificationBell } from "../notification bell/NotificationBell.component";
 
 const userItems = [
   {
@@ -186,6 +187,9 @@ export function AppSidebar({ username, role, isOpen }: AppSidebarProps) {
           aria-label="User menu"
         >
           <sidebar.SidebarMenu>
+          <sidebar.SidebarMenuItem role="none" className="mb-2">
+      <NotificationBell />
+    </sidebar.SidebarMenuItem>
             <sidebar.SidebarMenuItem role="none">
               <dropdown.DropdownMenu>
                 <dropdown.DropdownMenuTrigger

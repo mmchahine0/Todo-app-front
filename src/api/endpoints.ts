@@ -12,6 +12,10 @@ export const ENDPOINTS = {
     Base: "/todos",
     ById: (id: string) => `/todos/${id}`,
   },
+  Notifications: {
+    Base: "/notifications",
+    ById: (id: string) => `/notifications/${id}`,
+  },
   User: {
     Profile: "/user/profile",
   },

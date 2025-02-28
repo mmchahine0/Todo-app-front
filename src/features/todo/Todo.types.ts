@@ -6,6 +6,8 @@ export interface Todo {
   updatedAt: string;
   userId: string;
   completed: boolean;
+  collaborators?: TodoCollaborator[];
+  comments?: TodoComment[];
 }
 export interface TodoInput {
   title: string;
@@ -44,4 +46,47 @@ export interface DeleteDialogState {
   isOpen: boolean;
   todoId: string;
   todoTitle: string;
+}
+
+export interface TodoCollaborator {
+  id: string;
+  todoId: string;
+  userId: string;
+  addedAt: string;
+}
+
+export interface TodoComment {
+  id: string;
+  todoId: string;
+  userId: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface Notification {
+  id: string;
+  message: string;
+  read: boolean;
+  userId: string;
+  todoId: string | null;
+  createdAt: string;
+}
+
+export interface CollaboratorInput {
+  collaboratorId: string;
+}
+
+export interface CommentInput {
+  content: string;
+}
+export interface TodoCommentsResponse {
+  statusCode: number;
+  message: string;
+  data: TodoComment[];
+}
+
+export interface NotificationsResponse {
+  statusCode: number;
+  message: string;
+  data: Notification[];
 }
