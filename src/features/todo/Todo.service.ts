@@ -11,7 +11,7 @@ import {
   TodoCollaborator,
   TodoComment,
   TodoCommentsResponse,
-  Notification
+  Notification,
 } from "./Todo.types";
 import { ENDPOINTS } from "../../api/endpoints";
 
@@ -66,7 +66,6 @@ export const deleteTodo = async (
     accessToken,
   });
 };
-
 export const addCollaborator = async (
   todoId: string,
   collaboratorData: CollaboratorInput,
@@ -74,20 +73,19 @@ export const addCollaborator = async (
 ): Promise<TodoCollaborator> => {
   const response = await apiClient({
     method: "POST",
-    endpoint: `${ENDPOINTS.Todos.ById(todoId)}`,
+    endpoint: ENDPOINTS.Todos.Collaborators(todoId),
     data: collaboratorData,
     accessToken,
   });
   return response.data;
 };
-
 export const getTodoComments = async (
   todoId: string,
   accessToken: string
 ): Promise<TodoComment[]> => {
   const response = await apiClient({
     method: "GET",
-    endpoint: `${ENDPOINTS.Todos.ById(todoId)}`,
+    endpoint: ENDPOINTS.Todos.Comments.Get(todoId),
     accessToken,
   });
   return (response as TodoCommentsResponse).data;
@@ -100,7 +98,7 @@ export const addComment = async (
 ): Promise<TodoComment> => {
   const response = await apiClient({
     method: "POST",
-    endpoint: `${ENDPOINTS.Todos.ById(todoId)}`,
+    endpoint: ENDPOINTS.Todos.Comments.Add(todoId),
     data: commentData,
     accessToken,
   });
@@ -124,7 +122,7 @@ export const markNotificationAsRead = async (
 ): Promise<Notification> => {
   const response = await apiClient({
     method: "PUT",
-    endpoint: `${ENDPOINTS.Notifications.ById(notificationId)}`,
+    endpoint: ENDPOINTS.Notifications.MarkAsRead(notificationId),
     accessToken,
   });
   return response.data;

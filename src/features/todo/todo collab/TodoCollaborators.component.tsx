@@ -14,34 +14,53 @@ import {
 import { addCollaborator } from "../Todo.service";
 import { RootState } from "@/redux/persist/persist";
 import { queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface TodoCollaboratorsProps {
   todoId: string;
   title: string;
 }
 
-export const TodoCollaborators = ({ todoId, title }: TodoCollaboratorsProps) => {
+export const TodoCollaborators = ({
+  todoId,
+  title,
+}: TodoCollaboratorsProps) => {
+  const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [collaboratorId, setCollaboratorId] = useState("");
-  const accessToken = useSelector((state: RootState) => state.auth?.accessToken);
-  
+  const accessToken = useSelector(
+    (state: RootState) => state.auth?.accessToken
+  );
+
   const addCollaboratorMutation = useMutation({
-    mutationFn: () => 
-      addCollaborator(todoId, { collaboratorId }, accessToken),
+    mutationFn: () => addCollaborator(todoId, { collaboratorId }, accessToken),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["todos"] });
       setCollaboratorId("");
       setIsOpen(false);
+      toast({
+        title: "Success",
+        description: "Collaborator added successfully",
+        duration: 2000,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to add Collaborator",
+        duration: 2000,
+        variant: "destructive",
+      });
     },
   });
-  
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (collaboratorId.trim()) {
       addCollaboratorMutation.mutate();
     }
   };
-  
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>

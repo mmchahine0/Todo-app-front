@@ -7,15 +7,15 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 import { reportWebVitals } from "./utils/webVitals";
-// import { SocketProvider } from "./providers/SocketProvider.tsx";
+import { SocketProvider } from "./providers/SocketProvider";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
-        {/* <SocketProvider> */}
+        <SocketProvider>
           <App />
-        {/* </SocketProvider> */}
+        </SocketProvider>
       </PersistGate>
     </Provider>
   </React.StrictMode>

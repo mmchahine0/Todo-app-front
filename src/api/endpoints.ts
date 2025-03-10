@@ -11,10 +11,15 @@ export const ENDPOINTS = {
   Todos: {
     Base: "/todos",
     ById: (id: string) => `/todos/${id}`,
+    Collaborators: (id: string) => `/todos/${id}/collaborators`,
+    Comments: {
+      Get: (id: string) => `/todos/${id}/comments`,
+      Add: (id: string) => `/todos/${id}/comments`,
+    },
   },
   Notifications: {
     Base: "/notifications",
-    ById: (id: string) => `/notifications/${id}`,
+    MarkAsRead: (id: string) => `/notifications/${id}/read`,
   },
   User: {
     Profile: "/user/profile",
