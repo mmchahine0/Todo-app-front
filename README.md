@@ -93,19 +93,25 @@ Create `.env` files in both the client and server directories with the following
 #### Server (`.env`):
 
 ```env
-DATABASE_URL=your_postgresql_connection_string
-JWT_SECRET=your_jwt_secret
-JWT_REFRESH_SECRET=your_refresh_jwt_secret
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-GOOGLE_REFRESH_TOKEN=your_google_refresh_token
-REDIS_URL=your_redis_url
+DATABASE_URL="db"
+JWT_REFRESH_SECRET="anysecretkey"
+JWT_SECRET="anysecretkey"
+CORS_ORIGIN="corsport"
+PORT="port"
+REDIS_URL="redis"
+
+GMAIL_CLIENT_ID=""
+GMAIL_CLIENT_SECRET=""
+GMAIL_REFRESH_TOKEN=""
+GMAIL_EMAIL=""
 ```
 
 #### Client (`.env`):
 
 ```env
-VITE_API_URL=your_backend_api_url
+VITE_REDUX_ENCRYPTION_KEY="anysecretkey"
+VITE_API_BASE_URL="backendapi"
+VITE_SOCKET_URL="socket"
 ```
 
 ### Running the Application
